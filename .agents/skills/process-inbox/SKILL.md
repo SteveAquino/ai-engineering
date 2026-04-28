@@ -1,6 +1,6 @@
 ---
 name: process-inbox
-description: Process pending scheduling requests from the scheduler-assistant inbox. Parses markdown+frontmatter .md files, applies schedule/cancel changes to crontab.json, syncs to system crontab, then deletes each processed file.
+description: Process pending scheduling requests from the scheduling-assistant inbox. Parses markdown+frontmatter .md files, applies schedule/cancel changes to crontab.json, syncs to system crontab, then deletes each processed file.
 ---
 
 # Skill: Process Inbox
@@ -12,7 +12,7 @@ Read and apply all pending agent scheduling requests from the inbox directory. E
 ## Inbox Location
 
 ```
-~/work/personal/ai-engineering/agents/scheduler-assistant/inbox/
+~/work/personal/ai-engineering/agents/scheduling-assistant/inbox/
 ```
 
 ### Message format
@@ -40,7 +40,7 @@ Optional human-readable description.
 
 ```python
 import os, glob
-inbox = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/inbox")
+inbox = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/inbox")
 files = sorted(glob.glob(os.path.join(inbox, "*.md")))
 print(f"Found {len(files)} pending request(s):")
 for f in files:
@@ -101,7 +101,7 @@ Load current `crontab.json` and display what each request would do:
 
 ```python
 import json, os
-crontab_path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json")
+crontab_path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json")
 data = json.load(open(crontab_path)) if os.path.exists(crontab_path) else {"jobs": []}
 jobs = {j["id"]: j for j in data.get("jobs", [])}
 
@@ -150,7 +150,7 @@ Write updated `crontab.json` via `/tmp/apply_inbox.py`:
 
 ```python
 import json, os
-path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json")
 os.makedirs(os.path.dirname(path), exist_ok=True)
 with open(path, "w") as f:
     json.dump({"jobs": list(jobs.values())}, f, indent=2)
@@ -162,11 +162,11 @@ Regenerate the system crontab scheduler block (same logic as `manage-crons` Phas
 import subprocess, os
 
 COPILOT_BIN = os.path.expanduser("~/.nvm/versions/node/v24.12.0/bin/copilot")
-LOG_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/logs")
+LOG_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-block_start = "# BEGIN scheduler-assistant"
-block_end   = "# END scheduler-assistant"
+block_start = "# BEGIN scheduling-assistant"
+block_end   = "# END scheduling-assistant"
 
 result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
 existing = result.stdout if result.returncode == 0 else ""

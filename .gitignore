@@ -5,6 +5,6 @@ agents/*/sessions.md
 agents/*/weekly-retros/
 
 # Scheduler state
-agents/scheduler-assistant/crontab.json
-agents/scheduler-assistant/inbox/
-agents/scheduler-assistant/logs/
+agents/scheduling-assistant/crontab.json
+agents/scheduling-assistant/inbox/
+agents/scheduling-assistant/logs/

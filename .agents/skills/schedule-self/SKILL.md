@@ -1,22 +1,22 @@
 ---
 name: schedule-self
-description: Install or update the system cron entry that automatically runs the scheduler-assistant on a recurring schedule to process its inbox. Run once to bootstrap the scheduler.
+description: Install or update the system cron entry that automatically runs the scheduling-assistant on a recurring schedule to process its inbox. Run once to bootstrap the scheduler.
 ---
 
 # Skill: Schedule Self
 
-Bootstrap the scheduler by installing a system cron entry that periodically invokes the `scheduler-assistant` persona to run `process-inbox`. This is what makes the scheduler autonomous — it wakes itself up on a schedule.
+Bootstrap the scheduler by installing a system cron entry that periodically invokes the `scheduling-assistant` persona to run `process-inbox`. This is what makes the scheduler autonomous — it wakes itself up on a schedule.
 
 ---
 
 ## What Gets Installed
 
-A cron entry in the user's system crontab (inside the `scheduler-assistant` block) that runs:
+A cron entry in the user's system crontab (inside the `scheduling-assistant` block) that runs:
 
 ```bash
 <SCHEDULE>  ~/.nvm/versions/node/v24.12.0/bin/copilot \
-  -p "Assume role scheduler-assistant and immediately invoke the process-inbox skill" \
-  --yolo >> ~/work/personal/ai-engineering/agents/scheduler-assistant/logs/self-check.log 2>&1
+  -p "Assume role scheduling-assistant and immediately invoke the process-inbox skill" \
+  --yolo >> ~/work/personal/ai-engineering/agents/scheduling-assistant/logs/self-check.log 2>&1
 ```
 
 ---
@@ -27,17 +27,17 @@ A cron entry in the user's system crontab (inside the `scheduler-assistant` bloc
 import subprocess, re
 result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
 crontab = result.stdout if result.returncode == 0 else ""
-has_entry = "process-inbox" in crontab and "scheduler-assistant" in crontab
+has_entry = "process-inbox" in crontab and "scheduling-assistant" in crontab
 print("Self-scheduling entry found." if has_entry else "No self-scheduling entry found.")
 print()
 # Show current scheduler block if it exists
 in_block = False
 for line in crontab.splitlines():
-    if "# BEGIN scheduler-assistant" in line:
+    if "# BEGIN scheduling-assistant" in line:
         in_block = True
     if in_block:
         print(line)
-    if "# END scheduler-assistant" in line:
+    if "# END scheduling-assistant" in line:
         in_block = False
 ```
 
@@ -78,8 +78,8 @@ Show the exact cron line that will be written:
 
 ```
 <SELF_SCHEDULE>  ~/.nvm/versions/node/v24.12.0/bin/copilot \
-  -p "Assume role scheduler-assistant and immediately invoke the process-inbox skill" \
-  --yolo >> ~/work/personal/ai-engineering/agents/scheduler-assistant/logs/self-check.log 2>&1
+  -p "Assume role scheduling-assistant and immediately invoke the process-inbox skill" \
+  --yolo >> ~/work/personal/ai-engineering/agents/scheduling-assistant/logs/self-check.log 2>&1
 ```
 
 **Use `ask_user`:**
@@ -96,7 +96,7 @@ Otherwise, add the self-check entry to `crontab.json` as a special job:
 
 ```python
 import json, os, datetime
-path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json")
 data = json.load(open(path)) if os.path.exists(path) else {"jobs": []}
 jobs = data.get("jobs", [])
 
@@ -108,11 +108,11 @@ jobs.append({
     "id": "self-check",
     "description": "Scheduler self-check: process inbox on a recurring schedule",
     "schedule": SELF_SCHEDULE,
-    "role": "scheduler-assistant",
+    "role": "scheduling-assistant",
     "skill": "process-inbox",
     "enabled": True,
     "created_at": datetime.date.today().isoformat(),
-    "created_by": "scheduler-assistant"
+    "created_by": "scheduling-assistant"
 })
 
 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -126,11 +126,11 @@ Then regenerate the full system crontab block (same logic as `manage-crons` Phas
 import subprocess
 
 COPILOT_BIN = os.path.expanduser("~/.nvm/versions/node/v24.12.0/bin/copilot")
-LOG_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/logs")
+LOG_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-block_start = "# BEGIN scheduler-assistant"
-block_end   = "# END scheduler-assistant"
+block_start = "# BEGIN scheduling-assistant"
+block_end   = "# END scheduling-assistant"
 
 result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
 existing = result.stdout if result.returncode == 0 else ""
@@ -161,7 +161,7 @@ Confirm by running `crontab -l` and showing the scheduler block.
 
 Tell the user:
 - The schedule installed
-- Log file location: `~/work/personal/ai-engineering/agents/scheduler-assistant/logs/self-check.log`
+- Log file location: `~/work/personal/ai-engineering/agents/scheduling-assistant/logs/self-check.log`
 - How to stop: invoke `schedule-self` again and choose "Remove self-scheduling"
 
 ---

@@ -1,20 +1,20 @@
 ---
 name: manage-crons
-description: Review and edit the scheduler-assistant's cron job registry (crontab.json), then sync changes to the system crontab. Only invoke as the scheduler-assistant persona.
+description: Review and edit the scheduling-assistant's cron job registry (crontab.json), then sync changes to the system crontab. Only invoke as the scheduling-assistant persona.
 ---
 
 # Skill: Manage Crons
 
 View and edit the scheduled agent job registry. This skill is the **only** sanctioned way to modify `crontab.json` — direct edits bypass the sync to the system crontab and should never be done.
 
-⛔ **Only invoke this skill as the `scheduler-assistant` persona.**
+⛔ **Only invoke this skill as the `scheduling-assistant` persona.**
 
 ---
 
 ## Storage
 
 ```
-~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json
+~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json
 ```
 
 ---
@@ -25,7 +25,7 @@ Read and display `crontab.json`:
 
 ```python
 import json, os
-path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json")
 if not os.path.exists(path):
     print("(empty — no jobs scheduled yet)")
 else:
@@ -80,7 +80,7 @@ Build the new job entry:
   "skill": "<SKILL>",
   "enabled": true,
   "created_at": "<TODAY>",
-  "created_by": "scheduler-assistant"
+  "created_by": "scheduling-assistant"
 }
 ```
 
@@ -129,7 +129,7 @@ Write the updated file using a Python script at `/tmp/write_crontab.py`:
 
 ```python
 import json, os
-path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json")
 os.makedirs(os.path.dirname(path), exist_ok=True)
 data = {"jobs": UPDATED_JOBS}
 with open(path, "w") as f:
@@ -147,14 +147,14 @@ The scheduler owns a clearly-marked block in the system crontab. Regenerate it f
 import subprocess, os, json
 
 COPILOT_BIN = os.path.expanduser("~/.nvm/versions/node/v24.12.0/bin/copilot")
-LOG_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/logs")
+LOG_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduler-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/crontab.json")
 jobs = json.load(open(path)).get("jobs", []) if os.path.exists(path) else []
 
-block_start = "# BEGIN scheduler-assistant"
-block_end   = "# END scheduler-assistant"
+block_start = "# BEGIN scheduling-assistant"
+block_end   = "# END scheduling-assistant"
 
 result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
 existing = result.stdout if result.returncode == 0 else ""
@@ -202,5 +202,5 @@ If yes, return to Phase 1.
 
 - Always use Python scripts at `/tmp/` for file writes — bash heredocs with `${}` are blocked.
 - The `crontab.json` file is gitignored — it's personal operational state.
-- The scheduler block in the system crontab is bounded by `# BEGIN scheduler-assistant` / `# END scheduler-assistant` markers. Never edit lines inside this block manually.
-- Log files live at `~/work/personal/ai-engineering/agents/scheduler-assistant/logs/<job-id>.log`.
+- The scheduler block in the system crontab is bounded by `# BEGIN scheduling-assistant` / `# END scheduling-assistant` markers. Never edit lines inside this block manually.
+- Log files live at `~/work/personal/ai-engineering/agents/scheduling-assistant/logs/<job-id>.log`.
