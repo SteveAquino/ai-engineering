@@ -4,7 +4,7 @@ agents/*/memories.md.pre-dream-*
 agents/*/sessions.md
 agents/*/weekly-retros/
 
-# Scheduler state
+# Role runtime state — inbox, logs, and scheduler state never committed
+agents/*/inbox/
+agents/*/logs/
 agents/scheduling-assistant/crontab.json
-agents/scheduling-assistant/inbox/
-agents/scheduling-assistant/logs/
