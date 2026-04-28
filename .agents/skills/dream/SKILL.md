@@ -66,7 +66,7 @@ cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/memories.md
 For each session ID in `SESSION_IDS`:
 
 ```bash
-SESSION_DIR="$HOME/.copilot/session-state/<SESSION_ID>"
+SESSION_DIR="$HOME/.copilot/session-state/<SESSION_ID>"  # Copilot CLI
 
 # Check if the session exists and has checkpoints
 if [ -d "$SESSION_DIR/checkpoints" ]; then
@@ -110,7 +110,7 @@ Spawn a `general-purpose` subagent with the compiled brief and the following ins
 
 **Subagent prompt:**
 
-You are performing memory consolidation for a Copilot CLI role persona. You have been given:
+You are performing memory consolidation for an agent role persona. You have been given:
 1. The role's `instructions.md` — what this role cares about, its goals and communication style
 2. The role's current `memories.md` — accumulated memories from past sessions
 3. Checkpoint summaries from recent sessions — what was worked on and learned

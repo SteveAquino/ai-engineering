@@ -14,7 +14,7 @@ Use this skill at the end of a work session to capture learnings before they're 
 Determine the current session ID and state folder:
 
 ```bash
-# Session state is at ~/.copilot/session-state/<SESSION_ID>/
+# Session state (Copilot CLI): ~/.copilot/session-state/<SESSION_ID>/
 ls ~/.copilot/session-state/ | sort -r | head -5
 ```
 
@@ -190,7 +190,7 @@ Suggest next steps:
 
 ## Reference
 
-- Session state: `~/.copilot/session-state/<SESSION_ID>/`
+- Session state (Copilot CLI): `~/.copilot/session-state/<SESSION_ID>/`
 - Roles: `~/work/personal/ai-engineering/agents/`
 - Memory routing: invoke `remember` skill
 - Skill creation: invoke `create-skill` skill with a proposal file as the brief

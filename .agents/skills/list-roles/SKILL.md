@@ -1,6 +1,6 @@
 ---
 name: list-roles
-description: Show all available role personas in ~/work/personal/ai-engineering/agents/, their purpose, and saved session IDs for /resume. Quick overview of the role system.
+description: Show all available role personas in ~/work/personal/ai-engineering/agents/, their purpose, and saved session IDs for resuming. Quick overview of the role system.
 ---
 
 # Skill: List Roles

@@ -1,6 +1,6 @@
 ---
 name: assume-role
-description: Brief the current Copilot session with a role persona. Reads the role's instructions.md and memories.md from ~/work/personal/ai-engineering/agents/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
+description: Brief the current agent session with a role persona. Reads the role's instructions.md and memories.md from ~/work/personal/ai-engineering/agents/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
 ---
 
 # Skill: Assume Role
@@ -68,7 +68,7 @@ cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/sessions.md
 Choices: one entry per row formatted as `"<date> — <label>"`, plus `"Start a fresh session"`.
 
 If the user selects a prior session, note the session ID — surface it at the end of the briefing:
-> *To resume: run `/resume <SESSION_ID>` in a new Copilot window*
+> *To resume: run `/resume <SESSION_ID>` in a new session (Copilot CLI)*
 
 If starting fresh, proceed — a new entry will be logged in Phase 3.
 
@@ -111,7 +111,7 @@ DATE=$(date +%Y-%m-%d)
 echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> ~/work/personal/ai-engineering/agents/<ROLE_NAME>/sessions.md
 ```
 
-The session ID is available from the current Copilot session context.
+The session ID is available from the current session context.
 
 ---
 

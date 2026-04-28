@@ -1,6 +1,6 @@
 ---
 name: remember
-description: Append a timestamped memory entry to a role's memories.md file. Keeps role context durable across sessions and /compact operations. Offers consolidation when entries get long.
+description: Append a timestamped memory entry to a role's memories.md file. Keeps role context durable across sessions and context compaction. Offers consolidation when entries get long.
 ---
 
 # Skill: Remember

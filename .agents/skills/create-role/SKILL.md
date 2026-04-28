@@ -1,11 +1,11 @@
 ---
 name: create-role
-description: Interactively define a new Copilot CLI role persona. Gathers name, purpose, goals, and communication preferences, then scaffolds the role directory with instructions.md and an empty memories.md. Optionally assumes the role immediately.
+description: Interactively define a new role persona. Gathers name, purpose, goals, and communication preferences, then scaffolds the role directory with instructions.md and an empty memories.md. Optionally assumes the role immediately.
 ---
 
 # Skill: Create Role
 
-Use this skill to define a new persistent role persona. Roles are used by `assume-role` to brief a Copilot session with specific instructions and accumulated memories.
+Use this skill to define a new persistent role persona. Roles are used by `assume-role` to brief an agent session with specific instructions and accumulated memories.
 
 ---
 

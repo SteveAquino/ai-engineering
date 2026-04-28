@@ -329,7 +329,7 @@ Synthesize Round 3 outputs and append to `$WORKING_FILE`.
 Write the completed brainstorm document to `$WORKING_FILE`.
 
 ```bash
-SESSION_DIR="~/.copilot/session-state/<SESSION_ID>/"
+SESSION_DIR="~/.copilot/session-state/<SESSION_ID>/"  # Copilot CLI
 WORKING_FILE="${SESSION_DIR}brainstorm-${SLUG}.md"
 ```
 
@@ -415,7 +415,7 @@ Choices: `["Run another convergence round", "Start a new brainstorm on a differe
 
 ## Reference
 
-- Session state folder: `~/.copilot/session-state/<SESSION_ID>/` — use the active session folder
+- Session state folder (Copilot CLI): `~/.copilot/session-state/<SESSION_ID>/` — use the active session folder
 - Subagent spawning: `task` tool with `agent_type: "general-purpose"` and `mode: "background"` for parallel execution
 - Retrieving results: `read_agent` with each agent's ID after completion
 - Output file naming: `brainstorm-<slug>.md` where slug is lowercased, hyphenated, max 40 chars

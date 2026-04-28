@@ -1,11 +1,11 @@
 ---
 name: create-skill
-description: Meta-skill for creating a new Copilot CLI skill. Gathers the skill's purpose, classifies it as employer-specific or personal/portable, then scaffolds the SKILL.md in the right place — a git worktree + draft PR for employer skills, or the personal skills library for portable ones.
+description: Meta-skill for creating a new agent skill. Gathers the skill's purpose, classifies it as employer-specific or personal/portable, then scaffolds the SKILL.md in the right place — a git worktree + draft PR for employer skills, or the personal skills library for portable ones.
 ---
 
 # Skill: Create Skill
 
-Use this skill when you want to create a new Copilot CLI skill from scratch.
+Use this skill when you want to create a new agent skill from scratch.
 It will ask you what you want to build, classify the skill, scaffold the file, and land it in the right place.
 
 ---
@@ -200,7 +200,7 @@ Summarize what was created:
 - For personal skills: confirm it's live in `~/work/personal/ai-engineering/` and discoverable
 
 Remind the user:
-- **Personal skills** are immediately available — Copilot discovers them on next session launch via `skillDirectories`
+- **Personal skills** are immediately available — the agent discovers them on next session launch via `skillDirectories` (Copilot CLI)
 - **Employer skills** need the PR reviewed and merged before they're available to the team
 
 ---
