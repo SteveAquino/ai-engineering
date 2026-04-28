@@ -1,0 +1,5 @@
+# Private role state — never commit
+agents/*/memories.md
+agents/*/memories.md.pre-dream-*
+agents/*/sessions.md
+agents/*/weekly-retros/
