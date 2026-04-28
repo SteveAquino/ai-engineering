@@ -1,15 +1,34 @@
 ---
 name: prepare-daily-plan
-description: Gathers context from available tools and services to synthesize a prioritized daily work plan for the engineering manager, then writes it to the EM assistant's inbox. Designed to run autonomously (no user input required).
+description: Gathers context from available tools and services to synthesize a prioritized daily work plan, then writes it to the target role's inbox. Works for any role. Designed to run autonomously (no user input required after role selection).
 ---
 
 # Skill: Prepare Daily Plan
 
-Gather context, synthesize a prioritized plan for the day, and deliver it to the `engineering-manager-assistant` inbox. Designed to run headlessly — no `ask_user` calls. Make judgment calls and move forward.
+Gather context, synthesize a prioritized plan for the day, and deliver it to a role's inbox. Works for any role. Designed to run headlessly after the target role is known — make judgment calls and move forward.
 
 ---
 
 ## Phase 0 — Orient
+
+### 0a — Identify target role
+
+If a role was passed from a calling context (e.g., a cron job or `process-inbox`), use it directly as `TARGET_ROLE`.
+
+Otherwise, list available roles and ask:
+
+```bash
+ls -d ~/work/personal/ai-engineering/agents/*/ | xargs -I{} basename {}
+```
+
+**Use `ask_user`:**
+> "Which role should receive today's daily plan?"
+
+Choices: the discovered role names.
+
+Store as `TARGET_ROLE`.
+
+### 0b — Load role context
 
 Determine today's date:
 
@@ -18,17 +37,19 @@ date "+%A, %B %-d %Y"   # e.g. "Tuesday, April 28 2026"
 DATE=$(date +%Y%m%d)
 ```
 
-Read the EM role's `AGENTS.md` to understand current priorities and goals:
+Read the role's `AGENTS.md` to understand its priorities and goals:
 
 ```bash
-cat ~/work/personal/ai-engineering/agents/engineering-manager-assistant/AGENTS.md
+cat ~/work/personal/ai-engineering/agents/$TARGET_ROLE/AGENTS.md
 ```
 
 If `memories.md` exists and is non-empty, read it for recent context:
 
 ```bash
-cat ~/work/personal/ai-engineering/agents/engineering-manager-assistant/memories.md
+cat ~/work/personal/ai-engineering/agents/$TARGET_ROLE/memories.md
 ```
+
+Use the role's purpose and goals to guide what "important" means when prioritizing the plan.
 
 ---
 
@@ -62,30 +83,23 @@ gh issue list --state open --assignee @me --json number,title,labels,createdAt,u
   | python3 -c "import json,sys; issues=json.load(sys.stdin); [print(f'#{i[\"number\"]} {i[\"title\"]} {i[\"url\"]}') for i in issues]"
 ```
 
-### 1c. Ticket Queue (if Jira/acli available)
+### 1c. Ticket Queue
 
-Check for `acli`:
-
-```bash
-which acli 2>/dev/null && echo "acli available" || echo "acli not available"
-```
-
-If available, retrieve in-progress and ready tickets. The exact project key and JQL will depend on your setup — use the most relevant query you can infer from role memories or the `AGENTS.md`:
+Check for available skills that can read tickets. Scan the loaded skill directories for anything relevant:
 
 ```bash
-# Example — adapt project key and assignee from context
-acli jira issue list \
-  --jql "assignee = currentUser() AND sprint in openSprints() AND status in ('In Progress', 'To Do', 'Blocked') ORDER BY priority DESC" \
-  --columns "key,summary,status,priority" \
-  --limit 20
+ls ~/work/personal/ai-engineering/.agents/skills/
+# Also check any employer skill directories registered in ~/.copilot/settings.json
 ```
+
+Look for skills with names like `read-jira-ticket`, `atlassian-acli`, `list-tickets`, or similar. If found, invoke them to retrieve in-progress and queued tickets for the current user. Use the skill's own instructions to determine the right query — typically: tickets assigned to you, in an active sprint, with status In Progress / To Do / Blocked.
 
 Look for:
 - Blocked tickets (what's the blocker? can you unblock today?)
 - In-progress tickets (any that are stalled or need a nudge?)
 - High-priority To Do items that haven't been started
 
-If `acli` is not available, note it and skip.
+If no ticket-reading skill is available, note it and skip.
 
 ### 1d. Recent Activity (optional signal)
 
@@ -137,12 +151,13 @@ Guidelines:
 
 ## Phase 3 — Write to Inbox
 
-Write the plan to the EM assistant's inbox:
+Write the plan to the target role's inbox:
 
 ```python
 import os, datetime
 
-INBOX = os.path.expanduser("~/work/personal/ai-engineering/agents/engineering-manager-assistant/inbox")
+TARGET_ROLE = "<TARGET_ROLE>"
+INBOX = os.path.expanduser(f"~/work/personal/ai-engineering/agents/{TARGET_ROLE}/inbox")
 os.makedirs(INBOX, exist_ok=True)
 
 date_str = datetime.date.today().strftime("%Y%m%d")
@@ -171,8 +186,9 @@ Report a brief summary:
 Example:
 ```
 ✅ Daily plan ready — Tuesday, April 28 2026
+   Role: engineering-manager-assistant
    PRs: 4 open (2 awaiting review, 1 approved, 1 stalled)
-   Tickets: 6 found via acli (1 blocked, 3 in progress)
+   Tickets: 6 found via read-jira-ticket skill (1 blocked, 3 in progress)
    Issues: gh not available in this context
    Written to: ~/work/personal/ai-engineering/agents/engineering-manager-assistant/inbox/20260428-daily-plan.md
 ```
@@ -184,5 +200,5 @@ Example:
 - This skill is **read-only** except for writing the plan file to inbox. Do not close issues, merge PRs, update tickets, or post comments.
 - Adapt queries to whatever tools are available — the goal is to gather the richest context possible with what's accessible.
 - If running in cron context, all tool checks and data gathering should be non-interactive (no prompts, no auth flows).
-- The plan is intended to be read by the `engineering-manager-assistant` role via `process-inbox`, which will then act on it interactively with the user.
+- The plan is intended to be read by the target role via `process-inbox`, which will then act on it interactively with the user.
 - If no tools are available at all, write a minimal plan noting the unavailability and suggesting the user run the skill interactively.
