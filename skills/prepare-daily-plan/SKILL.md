@@ -88,7 +88,7 @@ gh issue list --state open --assignee @me --json number,title,labels,createdAt,u
 Check for available skills that can read tickets. Scan the loaded skill directories for anything relevant:
 
 ```bash
-ls ~/work/personal/ai-engineering/.agents/skills/
+ls ~/work/personal/ai-engineering/skills/
 # Also check any employer skill directories registered in ~/.copilot/settings.json
 ```
 

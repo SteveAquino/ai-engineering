@@ -23,7 +23,7 @@ Expert in designing and building Copilot CLI skills to automate developer workfl
 
 Two locations. Always determine placement before scaffolding.
 
-### 1. Personal skills — `~/work/personal/ai-engineering/.agents/skills/`
+### 1. Personal skills — `~/work/personal/ai-engineering/skills/`
 For skills that are portable across employers and projects. No internal tools, proprietary paths, or org-specific workflows. After creating: add a row to `personal-skills-index/SKILL.md`.
 
 **Signals:** uses general OS/CLI tools only (`git`, `gh`, `bash`, `afplay`, etc.); would be useful at any company; no references to internal services or org-specific docs.

@@ -34,7 +34,7 @@ These live in `~/work/personal/ai-engineering/` and are registered globally via 
 ## Adding a New Personal Skill
 
 ```bash
-mkdir -p ~/work/personal/ai-engineering/.agents/skills/<skill-name>
+mkdir -p ~/work/personal/ai-engineering/skills/<skill-name>
 # Create SKILL.md with frontmatter (name, description) + content
 # The agent will discover it automatically — no config change needed
 ```

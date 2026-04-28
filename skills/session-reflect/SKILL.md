@@ -147,7 +147,7 @@ If yes: for each skill in the "Potential Skills to Codify" section, write a prop
 # Skill Proposal: `<skill-name>`
 
 **Category:** [Personal / Employer-specific]
-**Suggested location:** `~/work/personal/ai-engineering/.agents/skills/<skill-name>/`
+**Suggested location:** `~/work/personal/ai-engineering/skills/<skill-name>/`
 
 ---
 

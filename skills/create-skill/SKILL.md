@@ -37,7 +37,7 @@ Choices: `["Yes — create a role", "No — it's still a skill"]`
 
 ---
 
-### Personal/portable skill → `~/work/personal/ai-engineering/.agents/skills/`
+### Personal/portable skill → `~/work/personal/ai-engineering/skills/`
 
 **Signals (all of these → personal skill):**
 - Uses only general OS/CLI tools (`git`, `gh`, `bash`, `afplay`, `brew`, etc.)
@@ -51,7 +51,7 @@ Choices: `["Yes — create a role", "No — it's still a skill"]`
 If the skill references internal tools, services, or org-specific workflows, it doesn't belong in the personal library.
 
 **Use `ask_user`:**
-> "Where should this skill live? Provide the path to the skills directory (e.g. `/path/to/repo/.agents/skills/` or `/path/to/repo/.github/skills/`)."
+> "Where should this skill live? Provide the path to the skills directory (e.g. `/path/to/repo/skills/` or `/path/to/repo/.github/skills/`)."
 
 Allow freeform. Store as `$SKILLS_DEST`.
 
@@ -104,7 +104,7 @@ Do not proceed until approved.
 
 ```bash
 SKILL_NAME="<skill-name>"
-PERSONAL_SKILLS="$HOME/work/personal/ai-engineering/.agents/skills"
+PERSONAL_SKILLS="$HOME/work/personal/ai-engineering/skills"
 mkdir -p "$PERSONAL_SKILLS/$SKILL_NAME"
 ```
 
@@ -116,7 +116,7 @@ Write `$PERSONAL_SKILLS/$SKILL_NAME/SKILL.md` with:
 **3b. Update the personal skills index**
 
 Add a new row to the `## Available Skills` table in:
-`$HOME/work/personal/ai-engineering/.agents/skills/personal-skills-index/SKILL.md`
+`$HOME/work/personal/ai-engineering/skills/personal-skills-index/SKILL.md`
 
 Row format:
 ```markdown
@@ -207,6 +207,6 @@ Remind the user:
 
 ## Reference
 
-- Personal skills library: `$HOME/work/personal/ai-engineering/.agents/skills/`
-- Personal skills index: `$HOME/work/personal/ai-engineering/.agents/skills/personal-skills-index/SKILL.md`
+- Personal skills library: `$HOME/work/personal/ai-engineering/skills/`
+- Personal skills index: `$HOME/work/personal/ai-engineering/skills/personal-skills-index/SKILL.md`
 - Skill conventions: study `assume-role`, `create-role`, and `session-reflect` as exemplars

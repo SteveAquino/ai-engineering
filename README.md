@@ -9,7 +9,7 @@ Personal AI agent skills and role personas.
 Skills are discrete, invocable instruction sets that tell an agent how to perform a specific task — from start to finish. Each skill lives in its own directory with a single `SKILL.md` file.
 
 ```
-.agents/skills/
+skills/
   assume-role/SKILL.md
   create-role/SKILL.md
   weekly-team-retro/SKILL.md
@@ -20,11 +20,11 @@ Register the directory with your agent so it can discover skills. For **Copilot 
 
 ```json
 "skillDirectories": [
-  "/Users/<you>/work/personal/ai-engineering/.agents/skills"
+  "/Users/<you>/work/personal/ai-engineering/skills"
 ]
 ```
 
-See [`personal-skills-index`](.agents/skills/personal-skills-index/SKILL.md) for the full list of available skills.
+See [`personal-skills-index`](skills/personal-skills-index/SKILL.md) for the full list of available skills.
 
 ---
 
@@ -85,9 +85,9 @@ To update a persona's instructions or memories: invoke `manage-role`.
 ## Adding a Skill
 
 ```bash
-mkdir -p .agents/skills/<skill-name>
-# Write .agents/skills/<skill-name>/SKILL.md
-# Add a row to .agents/skills/personal-skills-index/SKILL.md
+mkdir -p skills/<skill-name>
+# Write skills/<skill-name>/SKILL.md
+# Add a row to skills/personal-skills-index/SKILL.md
 ```
 
 Or invoke the `create-skill` skill to scaffold it interactively.
