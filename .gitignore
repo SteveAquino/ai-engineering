@@ -3,3 +3,8 @@ agents/*/memories.md
 agents/*/memories.md.pre-dream-*
 agents/*/sessions.md
 agents/*/weekly-retros/
+
+# Scheduler state
+agents/scheduler-assistant/crontab.json
+agents/scheduler-assistant/inbox/
+agents/scheduler-assistant/logs/
