@@ -23,12 +23,12 @@ Expert in designing and building Copilot CLI skills to automate developer workfl
 
 Three locations. Always determine placement before scaffolding.
 
-### 1. Personal skills — `~/work/personal/copilot-skills/.github/skills/`
+### 1. Personal skills — `~/work/personal/ai-engineering/.agents/skills/`
 For skills that are portable across employers and projects. No Carrum-specific tools, paths, or workflows. After creating: add a row to `personal-skills-index/SKILL.md`.
 
 **Signals:** uses general OS/CLI tools only (`git`, `gh`, `bash`, `afplay`, etc.); would be useful at any company; no Jira/Carrum references.
 
-### 2. Carrum shared skills — `$CARRUM_HOME/developer/.github/skills/` (via worktree + draft PR)
+### 2. Carrum shared skills — `$CARRUM_HOME/developer/.agents/skills/` (via worktree + draft PR)
 For skills that encode Carrum team workflows, use Carrum-specific tools, or reference internal services/docs. These are team assets — they need review before merging. After creating: add a row to `skills-reference/SKILL.md`, open a draft PR.
 
 **Signals:** uses `acli`; references `TEC`/`PI`/`INFRA` Jira projects; references Carrum services (`core-service-api`, `care-app-web`, `patient-app-mobile`, etc.); uses `$CARRUM_HOME`; references Carrum docs or conventions.
@@ -46,6 +46,6 @@ Choices: `["Personal library", "Carrum developer repo"]`
 **Default lean:** personal if in doubt — it's easier to move a skill to Carrum later than to extract Carrum-specific logic from a shared skill.
 
 ## Always Consult
-- `~/work/personal/copilot-skills/.github/skills/personal-skills-index/SKILL.md` — current personal skill inventory
-- `~/work/carrum/developer/.github/skills/skills-reference/SKILL.md` — current Carrum skill inventory
+- `~/work/personal/ai-engineering/.agents/skills/personal-skills-index/SKILL.md` — current personal skill inventory
+- `~/work/carrum/developer/.agents/skills/skills-reference/SKILL.md` — current Carrum skill inventory
 - Existing exemplar skills: `implement-ticket`, `create-story`, `assume-role`, `create-skill`

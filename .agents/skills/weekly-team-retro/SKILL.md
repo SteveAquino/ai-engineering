@@ -18,7 +18,7 @@ Generate a weekly engineering team retrospective. This skill pulls quantitative 
 Weekly retros are stored persistently in the EM assistant role directory:
 
 ```
-~/copilot-roles/engineering-manager-assistant/weekly-retros/YYYY-MM-DD-team-retro.md
+~/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros/YYYY-MM-DD-team-retro.md
 ```
 
 The date in the filename is always the **Monday** of the week being covered.
@@ -42,7 +42,7 @@ file_date = week_start.strftime("%Y-%m-%d")
 Check if a retro for this week already exists:
 
 ```bash
-RETRO_DIR="$HOME/copilot-roles/engineering-manager-assistant/weekly-retros"
+RETRO_DIR="$HOME/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros"
 ls "$RETRO_DIR/${file_date}-team-retro.md" 2>/dev/null
 ```
 
@@ -150,7 +150,7 @@ Write the markdown file using a Python script at `/tmp/write_weekly_retro.py` (n
 
 **File path:**
 ```python
-RETRO_DIR = os.path.expanduser("~/copilot-roles/engineering-manager-assistant/weekly-retros")
+RETRO_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros")
 OUTPUT = f"{RETRO_DIR}/{file_date}-team-retro.md"
 ```
 
@@ -231,7 +231,7 @@ Tell the user:
 To read a prior week's retro:
 
 ```bash
-ls ~/copilot-roles/engineering-manager-assistant/weekly-retros/
+ls ~/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros/
 ```
 
 Files are named `YYYY-MM-DD-team-retro.md` (Monday date of each week). Read with `view` tool.
@@ -243,6 +243,6 @@ Files are named `YYYY-MM-DD-team-retro.md` (Monday date of each week). Read with
 - Always use Python scripts at `/tmp/` for file writing — bash heredocs with `${}` are blocked.
 - Strip `GraphQL:` prefix lines from all acli JSON output before parsing.
 - Bot logins to exclude from review counts: `dependabot[bot]`, `github-actions[bot]`, `copilot-pull-request-reviewer[bot]`, `copilot-swe-agent[bot]`.
-- The EM assistant role (`~/copilot-roles/engineering-manager-assistant/`) is the source of truth for team context. Read `memories.md` at the start of each session for standing team knowledge.
+- The EM assistant role (`~/work/personal/ai-engineering/agents/engineering-manager-assistant/`) is the source of truth for team context. Read `memories.md` at the start of each session for standing team knowledge.
 - If running mid-week, note the retro is a partial view and label it accordingly.
 - Carrum repos: `core-service-api`, `care-app-web`, `patient-app-mobile`, `care-service-api`, `message-service`.

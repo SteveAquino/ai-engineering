@@ -18,7 +18,7 @@ Allow freeform. Validate it's kebab-case (lowercase, hyphens only). Store as `RO
 
 Check if the role already exists:
 ```bash
-ls ~/copilot-roles/<ROLE_NAME>/ 2>/dev/null
+ls ~/work/personal/ai-engineering/agents/<ROLE_NAME>/ 2>/dev/null
 ```
 
 If it exists, warn the user and ask:
@@ -72,7 +72,7 @@ If "Make changes", loop back to Phase 1 for the section the user wants to revise
 ## Phase 3 — Scaffold the Role
 
 ```bash
-ROLE_DIR="$HOME/copilot-roles/<ROLE_NAME>"
+ROLE_DIR="$HOME/work/personal/ai-engineering/agents/<ROLE_NAME>"
 mkdir -p "$ROLE_DIR"
 ```
 
@@ -81,13 +81,13 @@ Write `$ROLE_DIR/instructions.md` with the confirmed content from Phase 2.
 ```bash
 # Initialize empty memories and sessions files
 ROLE_NAME="<ROLE_NAME>"
-printf '## Recent\n\n' > "$HOME/copilot-roles/$ROLE_NAME/memories.md"
-printf '# Sessions: %s\n\n| Date | Session ID | Label |\n|---|---|---|\n' "$ROLE_NAME" > "$HOME/copilot-roles/$ROLE_NAME/sessions.md"
+printf '## Recent\n\n' > "$HOME/work/personal/ai-engineering/agents/$ROLE_NAME/memories.md"
+printf '# Sessions: %s\n\n| Date | Session ID | Label |\n|---|---|---|\n' "$ROLE_NAME" > "$HOME/work/personal/ai-engineering/agents/$ROLE_NAME/sessions.md"
 ```
 
 Confirm:
 ```bash
-ls -la ~/copilot-roles/<ROLE_NAME>/
+ls -la ~/work/personal/ai-engineering/agents/<ROLE_NAME>/
 ```
 
 ---
@@ -104,7 +104,7 @@ If "Yes", invoke the `assume-role` skill, passing `<ROLE_NAME>` as the target ro
 
 ## Reference
 
-- Roles directory: `~/copilot-roles/`
+- Roles directory: `~/work/personal/ai-engineering/agents/`
 - To switch roles later: invoke `assume-role`
 - To view all roles: invoke `list-roles`
 - To update role instructions later: invoke `manage-role`

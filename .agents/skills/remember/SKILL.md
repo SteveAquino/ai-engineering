@@ -27,7 +27,7 @@ Determine the target role:
 2. **Use `ask_user`:**
    > "Which role should this memory belong to?"
 
-   Choices: list of discovered role names from `ls -d ~/copilot-roles/*/`
+   Choices: list of discovered role names from `ls -d ~/work/personal/ai-engineering/agents/*/`
    
    If a default was identified in step 1, list it first with "(current session role)" appended.
 
@@ -40,7 +40,7 @@ Store as `ROLE_NAME`.
 Format the entry with today's date and append it under `## Recent` in the role's `memories.md`:
 
 ```bash
-ROLE_DIR="$HOME/copilot-roles/<ROLE_NAME>"
+ROLE_DIR="$HOME/work/personal/ai-engineering/agents/<ROLE_NAME>"
 DATE=$(date +%Y-%m-%d)
 ENTRY="### $DATE\n- <MEMORY_CONTENT>\n"
 
@@ -109,4 +109,4 @@ Choices: `["Yes — consolidate now", "Not yet"]`
 
 - To view all memories for a role: invoke `manage-role` → "View memories"
 - To load memories into the current session: invoke `assume-role`
-- Roles directory: `~/copilot-roles/`
+- Roles directory: `~/work/personal/ai-engineering/agents/`

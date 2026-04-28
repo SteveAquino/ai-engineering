@@ -14,11 +14,11 @@ Use this skill to inspect or maintain an existing role persona. Useful for refin
 List available roles:
 
 ```bash
-ls -d ~/copilot-roles/*/ 2>/dev/null | xargs -I{} basename {}
+ls -d ~/work/personal/ai-engineering/agents/*/ 2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `~/copilot-roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `~/work/personal/ai-engineering/agents/`. Use the `create-role` skill to define your first role."
 Stop here.
 
 **Use `ask_user`:**
@@ -47,7 +47,7 @@ Choices:
 ## Action: View Instructions
 
 ```bash
-cat ~/copilot-roles/<ROLE_NAME>/instructions.md
+cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/instructions.md
 ```
 
 Display the full contents. Offer to edit afterward:
@@ -73,7 +73,7 @@ After all sections, write the updated file and display the result.
 ## Action: View Memories
 
 ```bash
-cat ~/copilot-roles/<ROLE_NAME>/memories.md
+cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/memories.md
 ```
 
 Display the full contents. Then ask:
@@ -87,7 +87,7 @@ Choices: `["Consolidate memories", "Done"]`
 
 Count entries:
 ```bash
-grep -c "^### " ~/copilot-roles/<ROLE_NAME>/memories.md
+grep -c "^### " ~/work/personal/ai-engineering/agents/<ROLE_NAME>/memories.md
 ```
 
 Display the count. Then:
@@ -127,12 +127,12 @@ Allow freeform.
 Check if the new name already exists. If so, warn and abort.
 
 ```bash
-mv ~/copilot-roles/<ROLE_NAME> ~/copilot-roles/<NEW_NAME>
+mv ~/work/personal/ai-engineering/agents/<ROLE_NAME> ~/work/personal/ai-engineering/agents/<NEW_NAME>
 ```
 
 Confirm:
 ```bash
-ls ~/copilot-roles/
+ls ~/work/personal/ai-engineering/agents/
 ```
 
 ---
@@ -145,20 +145,20 @@ Choices: `["Yes — delete it", "Cancel"]`
 
 If confirmed:
 ```bash
-rm -rf ~/copilot-roles/<ROLE_NAME>
+rm -rf ~/work/personal/ai-engineering/agents/<ROLE_NAME>
 echo "Role '$ROLE_NAME' deleted."
 ```
 
 Confirm the deletion:
 ```bash
-ls ~/copilot-roles/
+ls ~/work/personal/ai-engineering/agents/
 ```
 
 ---
 
 ## Reference
 
-- Roles directory: `~/copilot-roles/`
+- Roles directory: `~/work/personal/ai-engineering/agents/`
 - To create a new role: invoke `create-role`
 - To assume a role: invoke `assume-role`
 - To append a new memory: invoke `remember`

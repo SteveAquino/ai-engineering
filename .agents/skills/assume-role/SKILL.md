@@ -1,6 +1,6 @@
 ---
 name: assume-role
-description: Brief the current Copilot session with a role persona. Reads the role's instructions.md and memories.md from ~/copilot-roles/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
+description: Brief the current Copilot session with a role persona. Reads the role's instructions.md and memories.md from ~/work/personal/ai-engineering/agents/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
 ---
 
 # Skill: Assume Role
@@ -14,11 +14,11 @@ Use this skill to steer the current session to operate under a specific role per
 List all role directories:
 
 ```bash
-ls -d ~/copilot-roles/*/  2>/dev/null | xargs -I{} basename {}
+ls -d ~/work/personal/ai-engineering/agents/*/  2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `~/copilot-roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `~/work/personal/ai-engineering/agents/`. Use the `create-role` skill to define your first role."
 Stop here.
 
 ---
@@ -44,7 +44,7 @@ Check how many session entries exist for the chosen role:
 
 ```bash
 # Count data rows (exclude header lines starting with | Date or |---|)
-grep -c "^| 20" ~/copilot-roles/<ROLE_NAME>/sessions.md 2>/dev/null || echo 0
+grep -c "^| 20" ~/work/personal/ai-engineering/agents/<ROLE_NAME>/sessions.md 2>/dev/null || echo 0
 ```
 
 If **0 entries** — skip to Phase 2 (fresh session, no prior context to resume).
@@ -59,7 +59,7 @@ Choices: `["Resume previous session", "Start a fresh session"]`
 If **2+ entries** — show the full sessions table and let the user pick:
 
 ```bash
-cat ~/copilot-roles/<ROLE_NAME>/sessions.md
+cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/sessions.md
 ```
 
 **Use `ask_user`:**
@@ -77,7 +77,7 @@ If starting fresh, proceed — a new entry will be logged in Phase 3.
 ## Phase 2 — Load Role Files
 
 ```bash
-ROLE_DIR="$HOME/copilot-roles/<ROLE_NAME>"
+ROLE_DIR="$HOME/work/personal/ai-engineering/agents/<ROLE_NAME>"
 
 # Verify the role exists
 if [[ ! -d "$ROLE_DIR" ]]; then
@@ -103,12 +103,12 @@ Append a new entry to the role's `sessions.md`. Ask for an optional label first:
 
 Allow freeform. If the user skips or provides nothing, use `(no label)`.
 
-Append a new row to `~/copilot-roles/<ROLE_NAME>/sessions.md`:
+Append a new row to `~/work/personal/ai-engineering/agents/<ROLE_NAME>/sessions.md`:
 
 ```bash
 DATE=$(date +%Y-%m-%d)
 # Append row: | date | session-id | label |
-echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> ~/copilot-roles/<ROLE_NAME>/sessions.md
+echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> ~/work/personal/ai-engineering/agents/<ROLE_NAME>/sessions.md
 ```
 
 The session ID is available from the current Copilot session context.
@@ -148,7 +148,7 @@ After delivering the briefing, begin responding in character as the role — app
 
 ## Reference
 
-- Roles directory: `~/copilot-roles/`
+- Roles directory: `~/work/personal/ai-engineering/agents/`
 - To create a new role: invoke `create-role`
 - To view all roles and session history: invoke `list-roles`
 - To re-brief after `/compact`: invoke `assume-role` again

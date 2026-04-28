@@ -1,6 +1,6 @@
 ---
 name: list-roles
-description: Show all available role personas in ~/copilot-roles/, their purpose, and saved session IDs for /resume. Quick overview of the role system.
+description: Show all available role personas in ~/work/personal/ai-engineering/agents/, their purpose, and saved session IDs for /resume. Quick overview of the role system.
 ---
 
 # Skill: List Roles
@@ -12,11 +12,11 @@ Use this skill to see all available role personas and their current state.
 ## Phase 0 — Discover Roles
 
 ```bash
-ls -d ~/copilot-roles/*/ 2>/dev/null | xargs -I{} basename {}
+ls -d ~/work/personal/ai-engineering/agents/*/ 2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `~/copilot-roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `~/work/personal/ai-engineering/agents/`. Use the `create-role` skill to define your first role."
 Stop here.
 
 ---
@@ -26,7 +26,7 @@ Stop here.
 For each discovered role, read:
 
 ```bash
-ROLE_DIR="$HOME/copilot-roles/<ROLE_NAME>"
+ROLE_DIR="$HOME/work/personal/ai-engineering/agents/<ROLE_NAME>"
 
 # Purpose: first non-header, non-empty line after "## Purpose" in instructions.md
 PURPOSE=$(awk '/^## Purpose/{found=1; next} found && NF{print; exit}' "$ROLE_DIR/instructions.md" 2>/dev/null || echo "(no instructions)")
@@ -80,5 +80,5 @@ To manage a role:      invoke manage-role
 
 ## Reference
 
-- Roles directory: `~/copilot-roles/`
+- Roles directory: `~/work/personal/ai-engineering/agents/`
 - Sessions are saved automatically when you invoke `assume-role`

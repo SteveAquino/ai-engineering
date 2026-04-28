@@ -122,7 +122,7 @@ If yes: follow the `remember` skill flow.
 
 ```bash
 # List available roles
-ls ~/copilot-roles/
+ls ~/work/personal/ai-engineering/agents/
 ```
 
 For each memory in the "Potential Memories to Record" table, append it to the chosen role's `memories.md` with a timestamp. Follow the same format as the `remember` skill:
@@ -147,7 +147,7 @@ If yes: for each skill in the "Potential Skills to Codify" section, write a prop
 # Skill Proposal: `<skill-name>`
 
 **Category:** [Personal / Carrum Health]
-**Suggested location:** `~/work/personal/copilot-skills/.github/skills/<skill-name>/`
+**Suggested location:** `~/work/personal/ai-engineering/.agents/skills/<skill-name>/`
 
 ---
 
@@ -191,6 +191,6 @@ Suggest next steps:
 ## Reference
 
 - Session state: `~/.copilot/session-state/<SESSION_ID>/`
-- Roles: `~/copilot-roles/`
+- Roles: `~/work/personal/ai-engineering/agents/`
 - Memory routing: invoke `remember` skill
 - Skill creation: invoke `create-skill` skill with a proposal file as the brief

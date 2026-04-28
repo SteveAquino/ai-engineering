@@ -50,7 +50,7 @@ Choices: `["Yes — create a role", "No — it's still a skill"]`
 
 ---
 
-### Personal/portable skill → `~/work/personal/copilot-skills/.github/skills/`
+### Personal/portable skill → `~/work/personal/ai-engineering/.agents/skills/`
 
 **Signals (all of these → personal skill):**
 - Uses only general OS/CLI tools (`git`, `gh`, `bash`, `afplay`, `brew`, etc.)
@@ -100,7 +100,7 @@ Do not proceed until approved.
 
 ```bash
 SKILL_NAME="<skill-name>"
-PERSONAL_SKILLS="$HOME/work/personal/copilot-skills/.github/skills"
+PERSONAL_SKILLS="$HOME/work/personal/ai-engineering/.agents/skills"
 mkdir -p "$PERSONAL_SKILLS/$SKILL_NAME"
 ```
 
@@ -112,7 +112,7 @@ Write `$PERSONAL_SKILLS/$SKILL_NAME/SKILL.md` with:
 **3b. Update the personal skills index**
 
 Add a new row to the `## Available Skills` table in:
-`$HOME/work/personal/copilot-skills/.github/skills/personal-skills-index/SKILL.md`
+`$HOME/work/personal/ai-engineering/.agents/skills/personal-skills-index/SKILL.md`
 
 Row format:
 ```markdown
@@ -210,7 +210,7 @@ Summarize what was created:
 - Skill name and location
 - What it does (one sentence)
 - For Carrum skills: worktree path + draft PR link
-- For personal skills: confirm it's live in `~/work/personal/copilot-skills/` and discoverable
+- For personal skills: confirm it's live in `~/work/personal/ai-engineering/` and discoverable
 
 Remind the user:
 - **Personal skills** are immediately available — Copilot discovers them on next session launch via `skillDirectories`
@@ -220,8 +220,8 @@ Remind the user:
 
 ## Reference
 
-- Personal skills library: `$HOME/work/personal/copilot-skills/.github/skills/`
-- Personal skills index: `$HOME/work/personal/copilot-skills/.github/skills/personal-skills-index/SKILL.md`
+- Personal skills library: `$HOME/work/personal/ai-engineering/.agents/skills/`
+- Personal skills index: `$HOME/work/personal/ai-engineering/.agents/skills/personal-skills-index/SKILL.md`
 - Carrum skills: `$CARRUM_HOME/developer/.github/skills/`
 - Carrum skills index: `$CARRUM_HOME/developer/.github/skills/skills-reference/SKILL.md`
 - Carrum PR template: `$CARRUM_HOME/developer/.github/PULL_REQUEST_TEMPLATE.md`
