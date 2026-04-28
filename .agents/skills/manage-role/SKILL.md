@@ -47,7 +47,7 @@ Choices:
 ## Action: View Instructions
 
 ```bash
-cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/instructions.md
+cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/AGENTS.md
 ```
 
 Display the full contents. Offer to edit afterward:
@@ -59,7 +59,7 @@ Choices: `["Yes — edit", "No, looks good"]`
 
 ## Action: Edit Instructions
 
-Show the current `instructions.md` section by section. For each section, ask:
+Show the current `AGENTS.md` section by section. For each section, ask:
 
 **Use `ask_user`:** "Current value for **<Section Name>**: `<current content>`. Update it?"
 Choices: `["Keep as-is", "Update"]`

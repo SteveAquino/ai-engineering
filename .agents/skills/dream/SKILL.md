@@ -57,7 +57,7 @@ Read the raw material for the synthesis subagent.
 ### 1a — Role context
 
 ```bash
-cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/instructions.md
+cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/AGENTS.md
 cat ~/work/personal/ai-engineering/agents/<ROLE_NAME>/memories.md
 ```
 
@@ -85,7 +85,7 @@ Compile all gathered content into a structured brief:
 ```
 === ROLE: <ROLE_NAME> ===
 
---- instructions.md ---
+--- AGENTS.md ---
 <content>
 
 --- memories.md (current) ---
@@ -111,7 +111,7 @@ Spawn a `general-purpose` subagent with the compiled brief and the following ins
 **Subagent prompt:**
 
 You are performing memory consolidation for an agent role persona. You have been given:
-1. The role's `instructions.md` — what this role cares about, its goals and communication style
+1. The role's `AGENTS.md` — what this role cares about, its goals and communication style
 2. The role's current `memories.md` — accumulated memories from past sessions
 3. Checkpoint summaries from recent sessions — what was worked on and learned
 

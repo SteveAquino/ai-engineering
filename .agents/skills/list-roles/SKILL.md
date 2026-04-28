@@ -28,8 +28,8 @@ For each discovered role, read:
 ```bash
 ROLE_DIR="$HOME/work/personal/ai-engineering/agents/<ROLE_NAME>"
 
-# Purpose: first non-header, non-empty line after "## Purpose" in instructions.md
-PURPOSE=$(awk '/^## Purpose/{found=1; next} found && NF{print; exit}' "$ROLE_DIR/instructions.md" 2>/dev/null || echo "(no instructions)")
+# Purpose: first non-header, non-empty line after "## Purpose" in AGENTS.md
+PURPOSE=$(awk '/^## Purpose/{found=1; next} found && NF{print; exit}' "$ROLE_DIR/AGENTS.md" 2>/dev/null || echo "(no instructions)")
 
 # Most recent session: last data row in sessions.md
 LAST_SESSION=$(grep "^| 20" "$ROLE_DIR/sessions.md" 2>/dev/null | tail -1)

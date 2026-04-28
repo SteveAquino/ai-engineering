@@ -1,6 +1,6 @@
 ---
 name: create-role
-description: Interactively define a new role persona. Gathers name, purpose, goals, and communication preferences, then scaffolds the role directory with instructions.md and an empty memories.md. Optionally assumes the role immediately.
+description: Interactively define a new role persona. Gathers name, purpose, goals, and communication preferences, then scaffolds the role directory with AGENTS.md and an empty memories.md. Optionally assumes the role immediately.
 ---
 
 # Skill: Create Role
@@ -43,7 +43,7 @@ Ask each question in sequence. Allow freeform for all.
 
 ## Phase 2 — Preview & Confirm
 
-Assemble and display the full `instructions.md` that will be written:
+Assemble and display the full `AGENTS.md` that will be written:
 
 ```markdown
 # Role: <ROLE_NAME>
@@ -76,7 +76,7 @@ ROLE_DIR="$HOME/work/personal/ai-engineering/agents/<ROLE_NAME>"
 mkdir -p "$ROLE_DIR"
 ```
 
-Write `$ROLE_DIR/instructions.md` with the confirmed content from Phase 2.
+Write `$ROLE_DIR/AGENTS.md` with the confirmed content from Phase 2.
 
 ```bash
 # Initialize empty memories and sessions files

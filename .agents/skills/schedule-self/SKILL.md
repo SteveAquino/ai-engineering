@@ -77,9 +77,9 @@ Store as `SELF_SCHEDULE`.
 Show the exact cron line that will be written:
 
 ```
-<SELF_SCHEDULE>  ~/.nvm/versions/node/v24.12.0/bin/copilot \
-  -p "Assume role scheduling-assistant and immediately invoke the process-inbox skill" \
-  --yolo >> ~/work/personal/ai-engineering/agents/scheduling-assistant/logs/self-check.log 2>&1
+<SELF_SCHEDULE>  ~/work/personal/ai-engineering/agents/scheduling-assistant/run-job.sh \
+  scheduling-assistant process-inbox \
+  ~/work/personal/ai-engineering/agents/scheduling-assistant/logs/self-check.log
 ```
 
 **Use `ask_user`:**
@@ -90,7 +90,7 @@ Choices: `["Yes — install it", "Cancel"]`
 
 ## Phase 3 — Install
 
-If "Remove self-scheduling" was chosen in Phase 0: remove the self-check entry from the `manage-crons` block and re-sync (using the same block-replacement logic as `manage-crons`). Then stop.
+If "Remove self-scheduling" was chosen in Phase 0: remove the self-check entry from the `manage-schedule` block and re-sync (using the same block-replacement logic as `manage-schedule`). Then stop.
 
 Otherwise, add the self-check entry to `crontab.json` as a special job:
 
@@ -120,7 +120,7 @@ with open(path, "w") as f:
     json.dump({"jobs": jobs}, f, indent=2)
 ```
 
-Then regenerate the full system crontab block (same logic as `manage-crons` Phase 5):
+Then regenerate the full system crontab block (same logic as `manage-schedule` Phase 5):
 
 ```python
 import subprocess
@@ -145,11 +145,14 @@ for line in lines:
     elif not inside:
         new_lines.append(line)
 
+# Use run-job.sh wrapper to handle auth + PATH reliably
+WRAPPER = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/run-job.sh")
+GH_BIN = "/opt/homebrew/bin/gh"
 block = [block_start]
 for j in jobs:
     if j.get("enabled", True):
-        cmd = (f'{COPILOT_BIN} -p "Assume role {j["role"]} and immediately invoke the {j["skill"]} skill"'
-               f' --yolo >> {LOG_DIR}/{j["id"]}.log 2>&1')
+        log = f"{LOG_DIR}/{j['id']}.log"
+        cmd = f"{WRAPPER} {j['role']} {j['skill']} {log}"
         block.append(f'{j["schedule"]}  {cmd}')
 block.append(block_end)
 
@@ -169,6 +172,8 @@ Tell the user:
 ## Notes
 
 - Always use Python scripts at `/tmp/` for file writes.
-- The `self-check` entry is stored in `crontab.json` like any other job — `manage-crons` will show it in the job table.
-- To temporarily pause without removing: use `manage-crons` to disable the `self-check` job.
+- The `self-check` entry is stored in `crontab.json` like any other job — `manage-schedule` will show it in the job table.
+- To temporarily pause without removing: use `manage-schedule` to disable the `self-check` job.
 - The Copilot CLI binary path `~/.nvm/versions/node/v24.12.0/bin/copilot` may vary. Verify with `which copilot` or `nvm which current` if the cron doesn't fire.
+- **Auth token:** `run-job.sh` reads from `~/.config/scheduling-assistant/token`. Refresh it when expired: `gh auth token > ~/.config/scheduling-assistant/token`
+- **First-time setup:** After installing, run `gh auth token > ~/.config/scheduling-assistant/token && chmod 600 ~/.config/scheduling-assistant/token`

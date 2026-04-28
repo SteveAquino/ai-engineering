@@ -1,6 +1,6 @@
 ---
 name: assume-role
-description: Brief the current agent session with a role persona. Reads the role's instructions.md and memories.md from ~/work/personal/ai-engineering/agents/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
+description: Brief the current agent session with a role persona. Reads the role's AGENTS.md and memories.md from ~/work/personal/ai-engineering/agents/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
 ---
 
 # Skill: Assume Role
@@ -85,7 +85,7 @@ if [[ ! -d "$ROLE_DIR" ]]; then
   exit 1
 fi
 
-cat "$ROLE_DIR/instructions.md"
+cat "$ROLE_DIR/AGENTS.md"
 echo "---MEMORIES---"
 cat "$ROLE_DIR/memories.md"
 ```
@@ -115,7 +115,25 @@ The session ID is available from the current session context.
 
 ---
 
-## Phase 4 — Deliver the Briefing
+## Phase 4 — Check Inbox
+
+Before delivering the briefing, check for pending inbox messages:
+
+```python
+import os, glob
+ROLE_NAME = "<ROLE_NAME>"
+inbox = os.path.expanduser(f"~/work/personal/ai-engineering/agents/{ROLE_NAME}/inbox")
+files = sorted(glob.glob(os.path.join(inbox, "*.md"))) if os.path.exists(inbox) else []
+print(f"Pending inbox messages: {len(files)}")
+for f in files:
+    print(f"  {os.path.basename(f)}")
+```
+
+If messages are found, include the **📬 Pending Inbox** section in the briefing. If empty, omit it.
+
+---
+
+## Phase 5 — Deliver the Briefing
 
 Output the full role briefing as a structured message:
 
@@ -127,11 +145,17 @@ I am now operating as the **`<ROLE_NAME>`** persona.
 
 ### Instructions
 
-<full contents of instructions.md>
+<full contents of AGENTS.md>
 
 ### Active Memories
 
 <full contents of memories.md — omit this section if memories.md is empty>
+
+### 📬 Pending Inbox (`<N> message(s)`)
+
+<list of pending inbox filenames — omit this entire section if inbox is empty>
+
+> Run `process-inbox` to handle these.
 
 ---
 

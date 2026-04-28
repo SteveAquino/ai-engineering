@@ -1,9 +1,9 @@
 ---
-name: manage-crons
+name: manage-schedule
 description: Review and edit the scheduling-assistant's cron job registry (crontab.json), then sync changes to the system crontab. Only invoke as the scheduling-assistant persona.
 ---
 
-# Skill: Manage Crons
+# Skill: Manage Schedule
 
 View and edit the scheduled agent job registry. This skill is the **only** sanctioned way to modify `crontab.json` — direct edits bypass the sync to the system crontab and should never be done.
 
@@ -170,12 +170,19 @@ for line in lines:
     elif not inside:
         new_lines.append(line)
 
-# Build new block
+# Build new block — use run-job.sh wrapper to handle auth + PATH reliably
+WRAPPER = os.path.expanduser("~/work/personal/ai-engineering/agents/scheduling-assistant/run-job.sh")
+LOG_DIR = "/tmp/scheduling-assistant"
+os.makedirs(LOG_DIR, exist_ok=True)
 block = [block_start]
 for j in jobs:
     if j.get("enabled", True):
-        cmd = (f'{COPILOT_BIN} -p "Assume role {j["role"]} and immediately invoke the {j["skill"]} skill"'
-               f' --yolo >> {LOG_DIR}/{j["id"]}.log 2>&1')
+        if "command" in j:
+            # Shell command job — run directly, log to /tmp
+            cmd = f'{j["command"]} >> {LOG_DIR}/{j["id"]}.log 2>&1'
+        else:
+            # Role+skill job — use wrapper (handles auth + PATH)
+            cmd = f"{WRAPPER} {j['role']} {j['skill']} {j['id']}"
         block.append(f'{j["schedule"]}  {cmd}')
 block.append(block_end)
 
@@ -204,3 +211,4 @@ If yes, return to Phase 1.
 - The `crontab.json` file is gitignored — it's personal operational state.
 - The scheduler block in the system crontab is bounded by `# BEGIN scheduling-assistant` / `# END scheduling-assistant` markers. Never edit lines inside this block manually.
 - Log files live at `~/work/personal/ai-engineering/agents/scheduling-assistant/logs/<job-id>.log`.
+- **Auth token:** `run-job.sh` reads from `~/.config/scheduling-assistant/token`. Refresh when expired: `gh auth token > ~/.config/scheduling-assistant/token`
