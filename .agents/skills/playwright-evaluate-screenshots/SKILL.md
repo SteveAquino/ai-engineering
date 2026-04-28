@@ -82,7 +82,7 @@ Output a structured evaluation report:
 ## Step-by-Step Results
 
 ### 01-initial-load.png — ✅ Pass
-**Observed:** Homepage loaded at carrumhealth.com, login form visible with email and password fields.
+**Observed:** Homepage loaded at example.com, login form visible with email and password fields.
 **Expected:** Login page should be visible.
 **Notes:** Page title matches, no error banners.
 

@@ -120,7 +120,7 @@ Your job is to produce a refined, pruned, consolidated version of `memories.md`.
 **Prune aggressively:**
 - Implementation-specific details that will rot: library syntax, version-specific workarounds, tool flags (`git worktree`, `Marp --allow-local-files`, etc.)
 - One-off fixes for bugs that are now resolved
-- Project-specific state that is no longer active (e.g., "we're currently on TEC-1234")
+- Project-specific state that is no longer active (e.g., "we're currently on PROJ-1234")
 - Entries that simply document how to use a tool — these belong in docs, not memories
 
 **Keep and elevate:**

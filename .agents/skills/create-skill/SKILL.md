@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Meta-skill for creating a new Copilot CLI skill. Gathers the skill's purpose, classifies it as Carrum Health-specific or personal/portable, then scaffolds the SKILL.md in the right place — a git worktree + draft PR in the developer repo for Carrum skills, or the personal skills library for portable ones.
+description: Meta-skill for creating a new Copilot CLI skill. Gathers the skill's purpose, classifies it as employer-specific or personal/portable, then scaffolds the SKILL.md in the right place — a git worktree + draft PR for employer skills, or the personal skills library for portable ones.
 ---
 
 # Skill: Create Skill
@@ -37,38 +37,42 @@ Choices: `["Yes — create a role", "No — it's still a skill"]`
 
 ---
 
-### Carrum Health skill → `$CARRUM_HOME/developer/.github/skills/` (worktree + draft PR)
-
-**Signals (any one of these → Carrum skill):**
-- Uses `acli` (Atlassian CLI) for Jira operations
-- References Carrum Jira projects: `TEC`, `PI`, or `INFRA`
-- References Carrum services: `core-service-api`, `care-app-web`, `patient-app-mobile`, `care-service-api`, `message-service-api`, `upload-service`, `price-service`
-- References `$CARRUM_HOME` or paths under the Carrum work directory
-- Uses the `coding_agent` Jira label
-- References Carrum documentation under `$CARRUM_HOME/developer/docs/`
-- Specific to Carrum's ticket lifecycle, sprint workflow, or team conventions
-
----
-
 ### Personal/portable skill → `~/work/personal/ai-engineering/.agents/skills/`
 
 **Signals (all of these → personal skill):**
 - Uses only general OS/CLI tools (`git`, `gh`, `bash`, `afplay`, `brew`, etc.)
 - Would be useful at any company or on any project
-- No references to Carrum-specific services, Jira projects, or internal docs
+- No references to internal services, proprietary tooling, or org-specific workflows
+
+---
+
+### Employer/project skill → ask for destination
+
+If the skill references internal tools, services, or org-specific workflows, it doesn't belong in the personal library.
+
+**Use `ask_user`:**
+> "Where should this skill live? Provide the path to the skills directory (e.g. `/path/to/repo/.agents/skills/` or `/path/to/repo/.github/skills/`)."
+
+Allow freeform. Store as `$SKILLS_DEST`.
+
+Also ask:
+**Use `ask_user`:**
+> "What GitHub repo should the PR be opened against? (e.g. `org/repo`)"
+
+Allow freeform. Store as `$GITHUB_REPO`.
 
 ---
 
 ### When ambiguous
 
-If signals are mixed or unclear, **always ask**:
+If it's unclear whether the skill is personal or employer-specific, **always ask**:
 
 **Use `ask_user`:**
-> "I'm leaning toward classifying this as a [Carrum / Personal] skill because [specific reason]. Does that sound right?"
+> "Should this skill go in your personal skills library (portable, any project) or somewhere else?"
 
-Choices: `["Yes — that's right", "No — make it Personal", "No — make it Carrum"]`
+Choices: `["Personal library", "Somewhere else — I'll provide the path"]`
 
-**Default lean:** personal if genuinely unsure — a personal skill is easier to migrate to Carrum later than vice versa.
+**Default lean:** personal if genuinely unsure — easier to move later.
 
 ---
 
@@ -129,23 +133,22 @@ Present the created file to the user and confirm it looks right.
 
 ---
 
-### If Carrum Health Skill:
+### If Employer/Project Skill:
 
 **3a. Create a git worktree**
 
-Use a descriptive branch name (no Jira key needed for pure skill work):
+Determine the repo root from `$SKILLS_DEST`. Use a descriptive branch name:
 
 ```bash
-cd $CARRUM_HOME/developer
 BRANCH="add-<skill-name>-skill"
-git worktree add $CARRUM_HOME/developer-$BRANCH -b $BRANCH
+git -C "<repo-root>" worktree add "<repo-root>-$BRANCH" -b $BRANCH
 ```
 
 **3b. Scaffold the skill file**
 
 ```bash
 SKILL_NAME="<skill-name>"
-SKILL_DIR="$CARRUM_HOME/developer-$BRANCH/.github/skills/$SKILL_NAME"
+SKILL_DIR="<worktree-path>/<skills-subdir>/$SKILL_NAME"
 mkdir -p "$SKILL_DIR"
 ```
 
@@ -153,25 +156,20 @@ Write `$SKILL_DIR/SKILL.md` with:
 - Frontmatter (`name`, `description`)
 - Content based on the approved design from Phase 2
 - Phase-driven structure with `ask_user` confirmation gates
-- Reference `$CARRUM_HOME/developer/.github/skills/` for any tool references
 
-**3c. Update the skills-reference index**
+**3c. Update the skills index**
 
-Add a new row to the `## Available Skills` table in:
-`$CARRUM_HOME/developer-$BRANCH/.github/skills/skills-reference/SKILL.md`
+If a `skills-reference` or `personal-skills-index` equivalent exists in the destination, add a new row:
 
-Row format:
 ```markdown
 | [`<skill-name>/SKILL.md`](../<skill-name>/SKILL.md) | <One-sentence description> |
 ```
 
-Keep rows in logical grouping order (reference skills first, then workflow/action skills).
-
 **3d. Commit**
 
 ```bash
-cd $CARRUM_HOME/developer-$BRANCH
-git add .github/skills/$SKILL_NAME/ .github/skills/skills-reference/SKILL.md
+cd "<worktree-path>"
+git add "<skills-subdir>/$SKILL_NAME/"
 git commit -m "Add $SKILL_NAME skill
 
 <brief description of what the skill does and when to use it>
@@ -183,23 +181,12 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 
 ```bash
 git push -u origin $BRANCH
-```
-
-Fill in the PR body using the template at `.github/PULL_REQUEST_TEMPLATE.md`. For skills PRs:
-- **Summary**: What the skill does and why it was added
-- **Jira Ticket**: Link if one exists, otherwise note "No ticket — skill addition"
-- **Risk Level**: Low (new skill, no existing behavior changed)
-- **AI Usage**: Check "Used AI to generate content or skills" + "I verified the accuracy and completeness"
-- **Documentation Checklist**: Confirm frontmatter description is accurate, links resolve, markdown renders correctly, skills-reference index updated
-- **Demo**: Paste example output or a short description of an invocation
-
-```bash
 gh pr create \
   --title "Add $SKILL_NAME skill" \
-  --body "<filled-in PR body>" \
+  --body "<summary of what the skill does, why it was added, and any notes for reviewers>" \
   --draft \
   --base main \
-  --repo carrumhealth/developer
+  --repo "$GITHUB_REPO"
 ```
 
 ---
@@ -209,12 +196,12 @@ gh pr create \
 Summarize what was created:
 - Skill name and location
 - What it does (one sentence)
-- For Carrum skills: worktree path + draft PR link
+- For employer skills: worktree path + draft PR link
 - For personal skills: confirm it's live in `~/work/personal/ai-engineering/` and discoverable
 
 Remind the user:
 - **Personal skills** are immediately available — Copilot discovers them on next session launch via `skillDirectories`
-- **Carrum skills** need the PR reviewed and merged before they're available to the team
+- **Employer skills** need the PR reviewed and merged before they're available to the team
 
 ---
 
@@ -222,8 +209,4 @@ Remind the user:
 
 - Personal skills library: `$HOME/work/personal/ai-engineering/.agents/skills/`
 - Personal skills index: `$HOME/work/personal/ai-engineering/.agents/skills/personal-skills-index/SKILL.md`
-- Carrum skills: `$CARRUM_HOME/developer/.github/skills/`
-- Carrum skills index: `$CARRUM_HOME/developer/.github/skills/skills-reference/SKILL.md`
-- Carrum PR template: `$CARRUM_HOME/developer/.github/PULL_REQUEST_TEMPLATE.md`
-- Carrum services: `$CARRUM_HOME/developer/docs/architecture/carrum-applications.md`
-- Skill conventions: study `implement-ticket`, `create-story`, and `create-platform-idea` as exemplars
+- Skill conventions: study `assume-role`, `create-role`, and `session-reflect` as exemplars

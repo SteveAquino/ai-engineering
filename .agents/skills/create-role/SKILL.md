@@ -12,7 +12,7 @@ Use this skill to define a new persistent role persona. Roles are used by `assum
 ## Phase 0 — Gather Role Identity
 
 **Use `ask_user`:**
-> "What should this role be called? Use kebab-case (e.g., `architect`, `eng-lead`, `carrum-staff-eng`)."
+> "What should this role be called? Use kebab-case (e.g., `architect`, `eng-lead`, `staff-engineer`)."
 
 Allow freeform. Validate it's kebab-case (lowercase, hyphens only). Store as `ROLE_NAME`.
 

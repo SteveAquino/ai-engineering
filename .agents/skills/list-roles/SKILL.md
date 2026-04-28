@@ -52,7 +52,7 @@ Present a clean summary table. For each role:
 Role:     architect
 Purpose:  Technical architecture advisor focused on system design and trade-offs
 Memories: 7 entries
-Sessions: 3 total  →  most recent: 2026-04-09 — TEC-1234 auth refactor
+Sessions: 3 total  →  most recent: 2026-04-09 — PROJ-1234 auth refactor
           /resume abc1234
 ─────────────────────────────────────────────────
 Role:     eng-lead
@@ -61,8 +61,8 @@ Memories: 3 entries
 Sessions: 1 total  →  2026-04-01 — (no label)
           /resume def456
 ─────────────────────────────────────────────────
-Role:     carrum-staff-eng
-Purpose:  Carrum Health staff engineer context
+Role:     staff-engineer
+Purpose:  Staff engineer context and best practices
 Memories: 0 entries
 Sessions: none
 ─────────────────────────────────────────────────

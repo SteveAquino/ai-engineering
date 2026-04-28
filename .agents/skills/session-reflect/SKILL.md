@@ -146,7 +146,7 @@ If yes: for each skill in the "Potential Skills to Codify" section, write a prop
 ```markdown
 # Skill Proposal: `<skill-name>`
 
-**Category:** [Personal / Carrum Health]
+**Category:** [Personal / Employer-specific]
 **Suggested location:** `~/work/personal/ai-engineering/.agents/skills/<skill-name>/`
 
 ---

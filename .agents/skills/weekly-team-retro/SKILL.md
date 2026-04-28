@@ -1,15 +1,15 @@
 ---
 name: weekly-team-retro
-description: Generates a weekly engineering team retrospective for the Engineering Manager. Fetches PR activity and Jira ticket completions for the current week, collects qualitative EM notes on each engineer via ask_user, and saves a persistent markdown report to the EM assistant role's weekly-retros directory.
+description: Generates a weekly engineering team retrospective. Fetches PR activity and Jira ticket completions for the current week, collects qualitative EM notes on each engineer via ask_user, and saves a persistent markdown report to the EM assistant role's weekly-retros directory. Requires GitHub CLI (gh) and Atlassian CLI (acli).
 ---
 
 # Skill: Weekly Team Retro
 
 Generate a weekly engineering team retrospective. This skill pulls quantitative data (PRs merged, tickets resolved, post-mortems) from the current week, prompts the EM for qualitative engineer notes one by one, then writes a structured markdown report to the EM role's persistent store.
 
-**References:**
-- acli command reference: `$CARRUM_HOME/developer/.github/skills/atlassian-acli/SKILL.md`
-- Jira field/project reference: `$CARRUM_HOME/developer/.github/skills/carrum-jira-reference/SKILL.md`
+**Prerequisites:**
+- [`gh`](https://cli.github.com/) — GitHub CLI, authenticated
+- [`acli`](https://developer.atlassian.com/cloud/acli/) — Atlassian CLI, authenticated
 
 ---
 
@@ -25,7 +25,61 @@ The date in the filename is always the **Monday** of the week being covered.
 
 ---
 
-## Phase 0 — Determine Week Window
+## Phase 0 — Load Team Config
+
+Read the team config from the EM assistant role directory:
+
+```bash
+CONFIG="$HOME/work/personal/ai-engineering/agents/engineering-manager-assistant/team-config.json"
+cat "$CONFIG" 2>/dev/null
+```
+
+**Expected shape:**
+```json
+{
+  "github_org": "your-org",
+  "repos": ["repo-1", "repo-2", "repo-3"],
+  "jira_project": "ENG",
+  "jira_domain": "your-org.atlassian.net",
+  "team_name": "Engineering Team"
+}
+```
+
+If the file is missing or any field is absent, prompt for each missing value:
+
+> **Use `ask_user`:**
+> "No team config found (or it's incomplete). What is your GitHub org?" *(freeform)*
+
+> "Which repos should I track? Provide a comma-separated list." *(freeform)*
+
+> "What is your Jira project key? (e.g. ENG, PLAT, TEC)" *(freeform)*
+
+> "What is your Jira domain? (e.g. your-org.atlassian.net)" *(freeform)*
+
+> "What should I call your team in the report? (e.g. Engineering Team, Platform Team)" *(freeform)*
+
+After collecting missing values, write the config file with a Python script:
+
+```python
+import json, os
+config = {
+    "github_org": GITHUB_ORG,
+    "repos": REPOS_LIST,
+    "jira_project": JIRA_PROJECT,
+    "jira_domain": JIRA_DOMAIN,
+    "team_name": TEAM_NAME
+}
+path = os.path.expanduser("~/work/personal/ai-engineering/agents/engineering-manager-assistant/team-config.json")
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with open(path, "w") as f:
+    json.dump(config, f, indent=2)
+```
+
+Store `GITHUB_ORG`, `REPOS`, `JIRA_PROJECT`, `JIRA_DOMAIN`, and `TEAM_NAME` as variables for the rest of this skill.
+
+---
+
+## Phase 1 — Determine Week Window
 
 Compute the Monday–Friday window for the current week:
 
@@ -54,18 +108,17 @@ If it exists, ask:
 
 ---
 
-## Phase 1 — Fetch Quantitative Data
+## Phase 2 — Fetch Quantitative Data
 
 Run all fetches in parallel.
 
-### 1a. PRs merged this week
+### 2a. PRs merged this week
 
-Query all 5 repos for PRs merged within the week window:
+Query all configured repos for PRs merged within the week window:
 
 ```bash
-REPOS=(core-service-api care-app-web patient-app-mobile care-service-api message-service)
 for repo in "${REPOS[@]}"; do
-  gh pr list --repo "carrumhealth/$repo" --state merged \
+  gh pr list --repo "$GITHUB_ORG/$repo" --state merged \
     --json number,title,url,mergedAt,additions,deletions,reviews \
     --limit 100
 done
@@ -76,34 +129,34 @@ Filter to `mergedAt` within the week window. For each PR record:
 - `size` = additions + deletions
 - `human_reviews` = reviews where author.login is not a bot (`dependabot[bot]`, `github-actions[bot]`, `copilot-pull-request-reviewer[bot]`, `copilot-swe-agent[bot]`)
 - `review_lag_hours` = time from `createdAt` to first human review `submittedAt`
-- Match TEC- ticket keys in title for Jira linkage
+- Match `<JIRA_PROJECT>-` ticket keys in title for Jira linkage
 
-### 1b. Tickets resolved this week (Jira)
+### 2b. Tickets resolved this week (Jira)
 
 ```bash
 acli jira workitem search \
-  --jql "project = TEC AND sprint in openSprints() AND status changed to (Released, Done, Closed, Deployed) AFTER '<WEEK_START_DATE>'" \
+  --jql "project = <JIRA_PROJECT> AND sprint in openSprints() AND status changed to (Released, Done, Closed, Deployed) AFTER '<WEEK_START_DATE>'" \
   --fields "key,summary,status,assignee,issuetype" \
   --json --limit 200
 ```
 
 If `sprint in openSprints()` returns empty (sprint may be closed), fall back to:
 ```bash
---jql "project = TEC AND sprint = '<SPRINT_NAME>' AND resolutiondate >= '<WEEK_START_DATE>'"
+--jql "project = <JIRA_PROJECT> AND sprint = '<SPRINT_NAME>' AND resolutiondate >= '<WEEK_START_DATE>'"
 ```
 
 Record: key, summary, status, assignee displayName, issue type.
 
-### 1c. Post-mortems in sprint
+### 2c. Post-mortems in sprint
 
 ```bash
 acli jira workitem search \
-  --jql "project = TEC AND sprint = '<SPRINT_NAME>' AND (summary ~ 'post-mortem' OR summary ~ 'postmortem')" \
+  --jql "project = <JIRA_PROJECT> AND sprint = '<SPRINT_NAME>' AND (summary ~ 'post-mortem' OR summary ~ 'postmortem')" \
   --fields "key,summary,status,assignee" \
   --json --limit 20
 ```
 
-### 1d. Build the engineer roster
+### 2d. Build the engineer roster
 
 From the tickets resolved and PRs merged, collect unique assignee displayNames and PR authors. This is the roster to iterate through for qualitative notes.
 
@@ -111,7 +164,7 @@ To get PR authors (gh doesn't always return `author` in list output), use assign
 
 ---
 
-## Phase 2 — Collect Qualitative Notes
+## Phase 3 — Collect Qualitative Notes
 
 For each engineer on the roster (sorted alphabetically by first name), ask:
 
@@ -132,7 +185,7 @@ After iterating through all engineers, ask:
 
 ---
 
-## Phase 3 — Identify Watch Items
+## Phase 4 — Identify Watch Items
 
 From the data, automatically surface:
 
@@ -144,7 +197,7 @@ From the data, automatically surface:
 
 ---
 
-## Phase 4 — Write the Retro
+## Phase 5 — Write the Retro
 
 Write the markdown file using a Python script at `/tmp/write_weekly_retro.py` (never use bash heredocs with `${}`).
 
@@ -157,7 +210,7 @@ OUTPUT = f"{RETRO_DIR}/{file_date}-team-retro.md"
 **Document structure:**
 
 ```markdown
-# Engineering Team — Weekly Retro
+# <TEAM_NAME> — Weekly Retro
 **Week of <WEEK_LABEL>**  
 _Generated <DATE>_
 
@@ -169,7 +222,7 @@ _Generated <DATE>_
 
 | Highlight | Ticket |
 |-----------|--------|
-| <key delivery> | [TEC-XXXX](...) |
+| <key delivery> | [<JIRA_PROJECT>-XXXX](...) |
 
 ---
 
@@ -201,8 +254,8 @@ _Generated <DATE>_
 ```
 
 **Linking rules:**
-- Every Jira key → `[TEC-XXXX](https://carrumhealth.atlassian.net/browse/TEC-XXXX)`
-- Every GitHub PR → `[repo-name #N](https://github.com/carrumhealth/<repo>/pull/<N>)`
+- Every Jira key → `[<JIRA_PROJECT>-XXXX](https://<JIRA_DOMAIN>/browse/<JIRA_PROJECT>-XXXX)`
+- Every GitHub PR → `[repo-name #N](https://github.com/<GITHUB_ORG>/<repo>/pull/<N>)`
 
 **Follow-ups** are auto-generated from:
 - Engineers with a concerning note → suggest 1:1 topic
@@ -211,7 +264,7 @@ _Generated <DATE>_
 
 ---
 
-## Phase 5 — Open and Confirm
+## Phase 6 — Open and Confirm
 
 ```bash
 python3 /tmp/write_weekly_retro.py
@@ -244,5 +297,5 @@ Files are named `YYYY-MM-DD-team-retro.md` (Monday date of each week). Read with
 - Strip `GraphQL:` prefix lines from all acli JSON output before parsing.
 - Bot logins to exclude from review counts: `dependabot[bot]`, `github-actions[bot]`, `copilot-pull-request-reviewer[bot]`, `copilot-swe-agent[bot]`.
 - The EM assistant role (`~/work/personal/ai-engineering/agents/engineering-manager-assistant/`) is the source of truth for team context. Read `memories.md` at the start of each session for standing team knowledge.
+- Team config (GitHub org, repos, Jira project/domain) is stored at `~/work/personal/ai-engineering/agents/engineering-manager-assistant/team-config.json`. Update it there if the team roster or repos change.
 - If running mid-week, note the retro is a partial view and label it accordingly.
-- Carrum repos: `core-service-api`, `care-app-web`, `patient-app-mobile`, `care-service-api`, `message-service`.
