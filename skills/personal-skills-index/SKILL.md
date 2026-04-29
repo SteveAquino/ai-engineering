@@ -13,6 +13,8 @@ These live in `~/work/personal/ai-engineering/` and are registered globally via 
 | Skill | Description |
 |---|---|
 | [`brainstorm/SKILL.md`](../brainstorm/SKILL.md) | Spawns parallel subagents to explore a problem from multiple perspectives, iterates through configurable rounds toward consensus, and saves a structured summary to the session-state folder. |
+| [`deep-research/SKILL.md`](../deep-research/SKILL.md) | Conducts deep, multi-source research on any question using parallel background agents (fleet mode). Produces a structured markdown report with TL;DR, comparison tables, Mermaid diagrams, and cited sources. |
+| [`generate-report/SKILL.md`](../generate-report/SKILL.md) | Generates a structured report file (Markdown, HTML, or PDF). Reference for any skill that writes files — documents all known failure modes and the reliable `/tmp` Python script pattern. |
 | [`dream/SKILL.md`](../dream/SKILL.md) | Consolidate and prune a role's memories by reviewing recent session checkpoints. Classifies each memory as durable or transient, elevates new insights from sessions, and produces a refined `memories.md` for human review before writing. |
 | [`assume-role/SKILL.md`](../assume-role/SKILL.md) | Brief the current session with a role persona. Reads `AGENTS.md` and `memories.md` from `~/work/personal/ai-engineering/agents/<name>/` and injects them as a structured briefing. No restart required — works mid-session. |
 | [`create-role/SKILL.md`](../create-role/SKILL.md) | Interactively define a new role persona. Gathers name, purpose, goals, and communication preferences, then scaffolds the role directory with `AGENTS.md` and `memories.md`. |
