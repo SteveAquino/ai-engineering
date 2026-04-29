@@ -1,6 +1,6 @@
 ---
 name: generate-report
-description: Generates a structured report file in the user's preferred format (default: Markdown). Documents the correct file-writing technique for Copilot CLI sessions — including what fails and the reliable /tmp Python script pattern.
+description: "Generates a structured report file in the user's preferred format (default: Markdown). Documents the correct file-writing technique for Copilot CLI sessions — including what fails and the reliable /tmp Python script pattern."
 ---
 
 # Skill: Generate Report
