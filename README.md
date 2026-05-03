@@ -40,6 +40,31 @@ This keeps the semantics clear:
 - `.agents/roles` is this repo's portable persona registry.
 - ignored role state remains local to each machine.
 
+## Local Reference Strategy
+
+Committed skills and roles should stay portable. Machine-specific knowledge belongs in gitignored role state beside each role:
+
+```text
+.agents/roles/<role-name>/
+  ROLE.md        # committed persona
+  memories.md    # ignored local references and durable context
+  sessions.md    # ignored local session log
+  inbox/         # ignored local messages
+  logs/          # ignored local runtime logs
+```
+
+Use `memories.md` to adapt the same committed role and skills to a specific machine. Good local memories include:
+
+- local workspace roots and adjacent repo maps
+- project-specific skill paths that should be treated as references, not copied globally
+- work-vs-personal skill variants and naming collision notes
+- local validation commands, screenshots locations, or dev-server habits
+- private team, employer, or client context that should never be committed
+
+This lets the portable skills stay generic while still giving the agent useful local bearings. For example, the committed `create-skill` workflow can say "classify placement first", while `skill-builder/memories.md` can record that a work machine already has a similar `spec-driven-development` skill and that a personal variant needs a collision review before being added.
+
+When a local reference becomes broadly useful and employer-neutral, promote it into a committed skill or role update. Until then, keep it in ignored role memory.
+
 ## Tool Setup
 
 ### Codex
