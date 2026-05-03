@@ -1,73 +1,70 @@
 # AGENTS.md
 
-This repository is a personal library of portable **agent skills** and **role personas** — not tied to any specific employer. Skills and roles work with any agent runtime that supports skill directories and plain-English skill invocation (e.g., GitHub Copilot CLI).
-
----
+This repository is a personal library of portable **agent skills** and **role personas**. It is not tied to any specific employer.
 
 ## Directory Structure
 
-```
+```text
 ai-engineering/
-  AGENTS.md                        ← this file
+  AGENTS.md
   .agents/
-    skills/                        ← personal portable skills
+    skills/
       <skill-name>/
-        SKILL.md                   ← skill definition (frontmatter + phased instructions)
-  agents/
-    <role-name>/
-      AGENTS.md                    ← role persona: purpose, goals, communication style
-      memories.md                  ← gitignored; persistent accumulated memories
-      sessions.md                  ← gitignored; session log with labels
-      inbox/                       ← gitignored; messages from other agents
+        SKILL.md
+    roles/
+      <role-name>/
+        ROLE.md
+        memories.md
+        sessions.md
+        inbox/
+        logs/
 ```
 
----
+## Concepts
+
+- `AGENTS.md` is ambient repository guidance for Codex and other coding agents.
+- `SKILL.md` defines an invocable workflow under `.agents/skills/<skill-name>/`.
+- `ROLE.md` defines a persistent persona under `.agents/roles/<role-name>/`.
+- `memories.md`, `sessions.md`, `inbox/`, `logs/`, and generated reports are local role state and are gitignored.
 
 ## Roles
 
-Roles are persistent personas. Assume a role to brief an agent session with specific instructions and accumulated memories.
+Roles are persistent personas. Use `assume-role` to brief an agent session with a role's `ROLE.md` and local `memories.md`.
 
 | Role | Purpose |
 |---|---|
-| `engineering-manager-assistant` | EM assistant — surfaces insights, drafts communications, tracks team health |
-| `scheduling-assistant` | Owns the scheduled agent task registry; manages cron jobs across agents |
+| `engineering-manager-assistant` | EM assistant: surfaces insights, drafts communications, tracks team health |
+| `scheduling-assistant` | Owns the scheduled agent task registry and recurring role inbox processing |
 | `skill-builder` | Expert in designing and building agent skills |
-| `software-engineering-assistant` | Software engineer assistant — implements tickets, writes tests, opens PRs |
-
-**To use:** invoke the `assume-role` skill. The role's `AGENTS.md` and `memories.md` are injected as a structured briefing into the session.
-
----
+| `software-engineering-assistant` | Software engineer assistant: implements tickets, writes tests, opens PRs |
 
 ## Skills
 
-Skills are composable, phased workflows. Invoke any skill by name.
+Skills are composable, phased workflows. For the full index with descriptions, invoke `personal-skills-index`.
 
-For a full index with descriptions: invoke the `personal-skills-index` skill.
+Core role skills:
 
-**Core role skills:**
-- `assume-role` — load a role persona into the current session
-- `create-role` / `manage-role` / `list-roles` — manage role personas
-- `dream` — consolidate and prune a role's memories
-- `remember` — append a memory to the active role
+- `assume-role` - load a role persona into the current session
+- `create-role`, `manage-role`, `list-roles` - manage role personas
+- `remember` - append a memory to the active role
+- `dream` - consolidate and prune a role's memories
 
-**Scheduling skills** (use as `scheduling-assistant`):
-- `manage-crons` — CRUD on the cron job registry
-- `process-inbox` — process pending messages in any role's inbox
-- `schedule-self` — bootstrap the self-scheduling cron entry
-- `send-message` — drop a plain-English message into any agent's inbox
+Scheduling skills:
 
-**Workflow skills:**
-- `brainstorm` — parallel multi-perspective exploration
-- `session-reflect` — end-of-session reflection and memory routing
-- `create-skill` — scaffold a new skill (personal or employer-specific)
-- `weekly-team-retro` — generate a weekly team retrospective
-- `osx-sounds` — play audio notifications on macOS
+- `manage-schedule` - CRUD on the scheduling assistant registry
+- `process-inbox` - process pending role inbox messages
+- `schedule-self` - bootstrap scheduler self-checking
+- `send-message` - drop a plain-English message into any role inbox
 
----
+Workflow skills:
+
+- `brainstorm` - parallel multi-perspective exploration
+- `session-reflect` - end-of-session reflection and memory routing
+- `create-skill` - scaffold a new skill
+- `weekly-team-retro` - generate a weekly team retrospective
 
 ## Conventions
 
-- `AGENTS.md` — role instructions (who the agent is, what it cares about, how it communicates)
-- `memories.md` — gitignored; durable context accumulated across sessions
-- `SKILL.md` — skill definition with YAML frontmatter and phased instructions
-- Inbox files are plain-English `.md` files — no schema required; the receiving role interprets them
+- Keep committed skills portable and employer-neutral.
+- Keep machine-specific paths, team context, and private operational state in ignored role files.
+- Do not use `AGENTS.md` for role personas; use `ROLE.md` so it is not confused with ambient repo instructions.

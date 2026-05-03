@@ -1,10 +1,11 @@
-# Private role state — never commit
-agents/*/memories.md
-agents/*/memories.md.pre-dream-*
-agents/*/sessions.md
-agents/*/weekly-retros/
+# Private role state - never commit
+.agents/roles/*/memories.md
+.agents/roles/*/memories.md.pre-dream-*
+.agents/roles/*/sessions.md
+.agents/roles/*/team-config.json
+.agents/roles/*/weekly-retros/
 
-# Role runtime state — inbox, logs, and scheduler state never committed
-agents/*/inbox/
-agents/*/logs/
-agents/scheduling-assistant/crontab.json
+# Role runtime state - inbox, logs, and scheduler state never committed
+.agents/roles/*/inbox/
+.agents/roles/*/logs/
+.agents/roles/scheduling-assistant/crontab.json

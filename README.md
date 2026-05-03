@@ -2,92 +2,165 @@
 
 Personal AI agent skills and role personas.
 
----
+This repository is a portable library for agent workflows that should follow me across projects and machines. It is intentionally not tied to a specific employer. Employer or machine-specific context belongs in ignored local state, not committed skill files.
 
-## Skills
+## Structure
 
-Skills are discrete, invocable instruction sets that tell an agent how to perform a specific task — from start to finish. Each skill lives in its own directory with a single `SKILL.md` file.
+The canonical structure is a single `.agents/` namespace:
 
+```text
+ai-engineering/
+  AGENTS.md
+  .agents/
+    skills/
+      <skill-name>/
+        SKILL.md
+    roles/
+      <role-name>/
+        ROLE.md
+        memories.md
+        sessions.md
+        inbox/
+        logs/
 ```
-skills/
-  assume-role/SKILL.md
-  create-role/SKILL.md
-  weekly-team-retro/SKILL.md
-  ...
+
+## Why This Shape
+
+Codex and the broader agent-skills ecosystem are converging on `.agents/skills/<skill>/SKILL.md` as the low-config, repo-local discovery path for reusable skills. Keeping skills there means Codex can discover repo skills without per-repo configuration, and user-global discovery can be handled with one junction or symlink.
+
+Roles/personas are first-class in this repo, but they are not the same thing as skills:
+
+- A skill is an invocable workflow: "do this task."
+- A role is a persistent operating profile: "think and communicate this way."
+- `AGENTS.md` is ambient repo guidance for Codex, so role personas use `ROLE.md` instead.
+
+This keeps the semantics clear:
+
+- `.agents/skills` is the standards-based discovery surface.
+- `.agents/roles` is this repo's portable persona registry.
+- ignored role state remains local to each machine.
+
+## Tool Setup
+
+### Codex
+
+Codex discovers user-global skills from `$HOME/.agents/skills`. Expose this repo's skills through a single link to `.agents/skills`.
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.agents"
+New-Item -ItemType Junction `
+  -Path "$HOME\.agents\skills" `
+  -Target "C:\Users\aquin\Projects\ai-engineering\.agents\skills"
 ```
 
-Register the directory with your agent so it can discover skills. For **Copilot CLI**, add to `skillDirectories` in `~/.copilot/settings.json`:
+macOS/Linux:
+
+```bash
+mkdir -p "$HOME/.agents"
+ln -sfn "$HOME/path/to/ai-engineering/.agents/skills" "$HOME/.agents/skills"
+```
+
+After creating or updating the junction, restart Codex. Skills should appear in `/skills` and be invokable by name with `$<skill-name>`.
+
+If you use role personas from outside this repo, expose roles the same way:
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Junction `
+  -Path "$HOME\.agents\roles" `
+  -Target "C:\Users\aquin\Projects\ai-engineering\.agents\roles"
+```
+
+macOS/Linux:
+
+```bash
+ln -sfn "$HOME/path/to/ai-engineering/.agents/roles" "$HOME/.agents/roles"
+```
+
+### GitHub Copilot CLI
+
+For tools that support explicit skill directories, point them at the canonical skills directory:
 
 ```json
 "skillDirectories": [
-  "/Users/<you>/work/personal/ai-engineering/skills"
+  "/path/to/ai-engineering/.agents/skills"
 ]
 ```
 
-See [`personal-skills-index`](skills/personal-skills-index/SKILL.md) for the full list of available skills.
-
----
-
-## Agent Personas
-
-A persona is a persistent role that can be loaded into any agent session to give it a specific identity, goals, and communication style. Personas live in `agents/<name>/`.
-
-```
-agents/
-  engineering-manager-assistant/
-    instructions.md   ← versioned: purpose, goals, communication style
-    memories.md       ← gitignored: accumulated session learnings
-    sessions.md       ← gitignored: session history log
-  skill-builder/
-    instructions.md
-    memories.md
-    sessions.md
-  ...
-```
-
-### `instructions.md` — versioned, portable
-
-Defines the role's **purpose**, **standing goals**, and **communication style**. This is the stable identity of the persona — it changes infrequently and is committed to the repo.
-
-Instructions are written as agent-agnostic principles. Environment-specific details (file paths, org names, tool locations) live in `memories.md` instead.
-
-### `memories.md` — persistent, gitignored
-
-Accumulates **session learnings** over time: patterns discovered, conventions observed, decisions made, gotchas hit. This is what makes a persona feel "experienced" — it carries forward knowledge across sessions.
-
-Memories are **gitignored** because they are personal and may contain employer-specific details. They persist locally between sessions but are never committed.
-
-Add memories via the `remember` skill. Consolidate and prune stale ones via the `dream` skill.
-
-### `sessions.md` — session history, gitignored
-
-An append-only log of every session the persona was loaded for: date, session ID, and label. Used by `assume-role` to offer resuming a prior session. Also gitignored.
-
----
-
-## Loading a Persona
-
-Invoke the `assume-role` skill at the start of a session. It will:
-
-1. List available personas and let you pick one
-2. Offer to resume a prior session or start fresh
-3. Read `instructions.md` and `memories.md`
-4. Inject both as a structured briefing into the conversation
-5. Log the session to `sessions.md`
-
-The agent then operates under that persona for the rest of the session — applying its goals, style, and accumulated knowledge.
-
-To create a new persona: invoke `create-role`.
-To update a persona's instructions or memories: invoke `manage-role`.
-
----
-
-## Adding a Skill
+Copilot CLI also supports skill directory configuration through `COPILOT_SKILLS_DIRS`:
 
 ```bash
-mkdir -p skills/<skill-name>
-# Write skills/<skill-name>/SKILL.md
-# Add a row to skills/personal-skills-index/SKILL.md
+export COPILOT_SKILLS_DIRS="/path/to/ai-engineering/.agents/skills"
 ```
 
-Or invoke the `create-skill` skill to scaffold it interactively.
+Use `assume-role` to load role personas from `.agents/roles`.
+
+### Claude Code
+
+Claude Code uses `~/.claude/skills/<skill-name>/SKILL.md` for user-global skills. Link this repo's canonical skills directory there.
+
+macOS/Linux:
+
+```bash
+mkdir -p "$HOME/.claude"
+ln -sfn "$HOME/path/to/ai-engineering/.agents/skills" "$HOME/.claude/skills"
+```
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.claude"
+New-Item -ItemType Junction `
+  -Path "$HOME\.claude\skills" `
+  -Target "C:\Users\aquin\Projects\ai-engineering\.agents\skills"
+```
+
+Use `assume-role` to load role personas from `.agents/roles`.
+
+## Skills
+
+Skills are discrete, invocable workflows. Each skill lives in its own directory with a `SKILL.md` file containing frontmatter and phased instructions.
+
+Examples:
+
+```text
+.agents/skills/
+  assume-role/SKILL.md
+  create-role/SKILL.md
+  session-reflect/SKILL.md
+```
+
+For a full index with descriptions, invoke `personal-skills-index`.
+
+To add a skill, invoke `create-skill`. Do not hand-create skill directories unless you are repairing the library or deliberately bypassing the workflow.
+
+## Roles
+
+Roles are persistent personas. A role briefs an agent session with a specific purpose, standing goals, communication style, and accumulated memories.
+
+Examples:
+
+```text
+.agents/roles/
+  skill-builder/
+    ROLE.md
+    memories.md
+    sessions.md
+  software-engineering-assistant/
+    ROLE.md
+    memories.md
+    sessions.md
+```
+
+To use a role, invoke `assume-role`.
+
+## Adding A Skill
+
+Invoke `create-skill`. It classifies whether the request is a portable personal skill, a project/employer skill, or actually a role, then scaffolds the correct `SKILL.md` and updates the skills index.
+
+## Adding A Role
+
+Invoke `create-role`. It scaffolds the role's `ROLE.md` and initializes the ignored local state files that `assume-role`, `remember`, and `dream` use.
