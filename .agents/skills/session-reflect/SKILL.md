@@ -135,11 +135,19 @@ For each memory in the "Potential Memories to Record" table, append it to the ch
 
 ## Phase 4 — Route Skill Proposals
 
+**Apply the quality rubric before proposing any skill.** Read `skill-proposal-rubric.md` (next to this SKILL.md) and score each candidate against the five gates. A candidate that passes 4+ gates is ready to propose. A candidate that passes fewer than 4 should be logged as a `[skill-candidate]` memory entry instead — not a proposal file.
+
+**`[skill-candidate]` memory format** (for borderline/first-occurrence patterns):
+```
+[skill-candidate] `<proposed-name>`: <one-sentence description>. First seen: <date or session ID>.
+```
+Route these to the active role's `memories.md` via the `remember` skill rather than creating a proposal file.
+
 **Use `ask_user`:**
 > "Would you like me to create proposal markdown files for the skills identified?"
 Choices: `["Yes — create proposal files", "No — skip"]`
 
-If yes: for each skill in the "Potential Skills to Codify" section, write a proposal file to `$SESSION_DIR/files/skill-proposal-<skill-name>.md`.
+If yes: for each skill that **passed the rubric** (4+ gates), write a proposal file to `$SESSION_DIR/files/skill-proposal-<skill-name>.md`.
 
 **Proposal file template:**
 

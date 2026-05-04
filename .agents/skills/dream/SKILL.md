@@ -223,6 +223,32 @@ If "Discard": confirm and stop. The current `memories.md` is unchanged.
 
 ---
 
+## Phase 3b — Skill Candidate Consolidation
+
+After reviewing memories, scan the current `memories.md` for `[skill-candidate]` entries:
+
+```bash
+grep -n "\[skill-candidate\]" .agents/roles/<ROLE_NAME>/memories.md
+```
+
+Group candidates by concept proximity. For any concept with **2 or more independent entries**, apply the skill proposal rubric from `session-reflect/skill-proposal-rubric.md` and surface a finding:
+
+```
+## Skill Candidate Review
+
+- `<name>`: N occurrences — recommend formalizing / keep watching / prune
+  Reason: <one sentence>
+```
+
+**Thresholds:**
+- 2+ occurrences AND passes 4+ rubric gates → **recommend formalizing** (invoke `create-skill`)
+- 2+ occurrences but fails rubric → **keep watching**, note which gates it fails
+- 1 occurrence with no recurrence after 3+ dream cycles → **recommend pruning**
+
+Present findings to the user after the memories review. Do not act on them automatically — skill creation is always a human-confirmed action.
+
+---
+
 ## Phase 4 — Write
 
 1. Back up the current file:

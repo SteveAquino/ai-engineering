@@ -8,6 +8,8 @@ description: Meta-skill for creating a new agent skill. Gathers the skill's purp
 Use this skill when you want to create a new agent skill from scratch.
 It will ask you what you want to build, classify the skill, scaffold the file, and land it in the right place.
 
+**Quality gate:** Before scaffolding, check `session-reflect/skill-proposal-rubric.md`. A skill should pass at least 4 of the 5 rubric gates. If it doesn't, suggest logging it as a `[skill-candidate]` memory entry instead and waiting for recurrence.
+
 ---
 
 ## Phase 0 — Intake
