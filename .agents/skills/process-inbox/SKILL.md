@@ -1,11 +1,11 @@
 ---
 name: process-inbox
-description: Process pending messages in the current role's inbox. Reads each plain-English message, uses the role's ROLE.md to interpret intent, applies the appropriate action, and deletes the file. Works for any role — role-specific behavior is defined in each role's ROLE.md.
+description: Process pending messages in the current role's inbox. Reads each plain-English message, uses the role's AGENTS.md to interpret intent, applies the appropriate action, and asks before deleting. Works for any role — role-specific behavior is defined in each role's AGENTS.md.
 ---
 
 # Skill: Process Inbox
 
-Read and process all pending messages in the current role's inbox. Messages are plain-English `.md` files with minimal frontmatter. The active role's `ROLE.md` defines how messages are interpreted and acted upon — this skill contains no role-specific logic itself.
+Read and process all pending messages in the current role's inbox. Messages are plain-English `.md` files with minimal frontmatter. The active role's `AGENTS.md` defines how messages are interpreted and acted upon — this skill contains no role-specific logic itself.
 
 ---
 
@@ -20,7 +20,7 @@ The current role is known from the active `assume-role` briefing in this session
 ```python
 import os, glob
 CURRENT_ROLE = "<CURRENT_ROLE>"
-inbox = os.path.expanduser(f"~/.agents/roles/{CURRENT_ROLE}/inbox")
+inbox = os.path.expanduser(f"~/work/personal/ai-engineering/agents/{CURRENT_ROLE}/inbox")
 files = sorted(glob.glob(os.path.join(inbox, "*.md"))) if os.path.exists(inbox) else []
 print(f"Found {len(files)} pending message(s) in {CURRENT_ROLE} inbox:")
 for f in files:
@@ -36,7 +36,7 @@ Stop here.
 ## Phase 2 — Load Role Instructions
 
 ```bash
-cat ~/.agents/roles/<CURRENT_ROLE>/ROLE.md
+cat ~/work/personal/ai-engineering/agents/<CURRENT_ROLE>/AGENTS.md
 ```
 
 Read the full instructions, paying close attention to the **Inbox Handling** section — it defines how to interpret and act on messages for this role.
@@ -75,7 +75,18 @@ If running autonomously (cron / `--yolo`): apply the most reasonable interpretat
 
 **Execute** the action per the role's instructions.
 
-**Delete** the file immediately after successful processing:
+**Ask before deleting** (unless running autonomously):
+
+**Use `ask_user`:**
+> "Message `<filename>` processed. Delete it from the inbox?"
+
+Choices: `["Yes — delete it", "No — keep it"]`
+
+If running autonomously (cron / `--yolo`): delete without asking.
+
+If kept: leave the file in place and note it in the Phase 4 summary as "processed but retained."
+
+**Delete** the file if confirmed:
 ```python
 import os
 os.remove(filepath)
@@ -95,9 +106,20 @@ Report:
 
 ## Notes
 
-- The inbox lives at `~/.agents/roles/<ROLE>/inbox/`
+- The inbox lives at `~/work/personal/ai-engineering/agents/<ROLE>/inbox/`
 - Messages are written by the `send-message` skill or any agent that drops `.md` files there
-- Processed files are deleted — not archived
-- Role-specific behavior is **entirely defined in `ROLE.md`** — this skill is role-agnostic
+- Processed files are deleted only after user confirmation (or automatically in cron/autonomous mode)
+- Kept files remain in the inbox and are noted in the summary as "processed but retained"
+- Role-specific behavior is **entirely defined in `AGENTS.md`** — this skill is role-agnostic
 - If `yaml` is not available: `pip3 install pyyaml --quiet`
 - Always use Python scripts at `/tmp/` for file writes
+
+## Local References
+
+If a `references/` directory exists next to this `SKILL.md`, load all `.md` files there
+before executing. Reference files may override defaults, add team-specific patterns,
+or provide additional links and context.
+
+```bash
+ls "$(dirname "$0")/references/"*.md 2>/dev/null
+```

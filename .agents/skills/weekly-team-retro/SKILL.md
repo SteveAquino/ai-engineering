@@ -18,37 +18,22 @@ Generate a weekly engineering team retrospective. This skill pulls quantitative 
 Weekly retros are stored persistently in the EM assistant role directory:
 
 ```
-~/.agents/roles/engineering-manager-assistant/weekly-retros/YYYY-MM-DD-team-retro.md
+~/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros/YYYY-MM-DD-team-retro.md
 ```
 
 The date in the filename is always the **Monday** of the week being covered.
 
 ---
 
-## Phase 0 — Load Team Config
+## Phase 0 — Load Team Context
 
-Read the team config from the EM assistant role directory:
+Load team config from the `references/` directory (if present — see Local References below).
+The reference file provides `GITHUB_ORG`, `JIRA_PROJECT`, `JIRA_DOMAIN`, `TEAM_NAME`, and a pointer to the repo list.
 
-```bash
-CONFIG="$HOME/.agents/roles/engineering-manager-assistant/team-config.json"
-cat "$CONFIG" 2>/dev/null
-```
-
-**Expected shape:**
-```json
-{
-  "github_org": "your-org",
-  "repos": ["repo-1", "repo-2", "repo-3"],
-  "jira_project": "ENG",
-  "jira_domain": "your-org.atlassian.net",
-  "team_name": "Engineering Team"
-}
-```
-
-If the file is missing or any field is absent, prompt for each missing value:
+If any value is absent after loading references, prompt for it:
 
 > **Use `ask_user`:**
-> "No team config found (or it's incomplete). What is your GitHub org?" *(freeform)*
+> "What is your GitHub org?" *(freeform)*
 
 > "Which repos should I track? Provide a comma-separated list." *(freeform)*
 
@@ -57,23 +42,6 @@ If the file is missing or any field is absent, prompt for each missing value:
 > "What is your Jira domain? (e.g. your-org.atlassian.net)" *(freeform)*
 
 > "What should I call your team in the report? (e.g. Engineering Team, Platform Team)" *(freeform)*
-
-After collecting missing values, write the config file with a Python script:
-
-```python
-import json, os
-config = {
-    "github_org": GITHUB_ORG,
-    "repos": REPOS_LIST,
-    "jira_project": JIRA_PROJECT,
-    "jira_domain": JIRA_DOMAIN,
-    "team_name": TEAM_NAME
-}
-path = os.path.expanduser("~/.agents/roles/engineering-manager-assistant/team-config.json")
-os.makedirs(os.path.dirname(path), exist_ok=True)
-with open(path, "w") as f:
-    json.dump(config, f, indent=2)
-```
 
 Store `GITHUB_ORG`, `REPOS`, `JIRA_PROJECT`, `JIRA_DOMAIN`, and `TEAM_NAME` as variables for the rest of this skill.
 
@@ -96,7 +64,7 @@ file_date = week_start.strftime("%Y-%m-%d")
 Check if a retro for this week already exists:
 
 ```bash
-RETRO_DIR="$HOME/.agents/roles/engineering-manager-assistant/weekly-retros"
+RETRO_DIR="$HOME/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros"
 ls "$RETRO_DIR/${file_date}-team-retro.md" 2>/dev/null
 ```
 
@@ -203,7 +171,7 @@ Write the markdown file using a Python script at `/tmp/write_weekly_retro.py` (n
 
 **File path:**
 ```python
-RETRO_DIR = os.path.expanduser("~/.agents/roles/engineering-manager-assistant/weekly-retros")
+RETRO_DIR = os.path.expanduser("~/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros")
 OUTPUT = f"{RETRO_DIR}/{file_date}-team-retro.md"
 ```
 
@@ -284,7 +252,7 @@ Tell the user:
 To read a prior week's retro:
 
 ```bash
-ls ~/.agents/roles/engineering-manager-assistant/weekly-retros/
+ls ~/work/personal/ai-engineering/agents/engineering-manager-assistant/weekly-retros/
 ```
 
 Files are named `YYYY-MM-DD-team-retro.md` (Monday date of each week). Read with `view` tool.
@@ -296,6 +264,16 @@ Files are named `YYYY-MM-DD-team-retro.md` (Monday date of each week). Read with
 - Always use Python scripts at `/tmp/` for file writing — bash heredocs with `${}` are blocked.
 - Strip `GraphQL:` prefix lines from all acli JSON output before parsing.
 - Bot logins to exclude from review counts: `dependabot[bot]`, `github-actions[bot]`, `copilot-pull-request-reviewer[bot]`, `copilot-swe-agent[bot]`.
-- The EM assistant role (`~/.agents/roles/engineering-manager-assistant/`) is the source of truth for team context. Read `memories.md` at the start of each session for standing team knowledge.
-- Team config (GitHub org, repos, Jira project/domain) is stored at `~/.agents/roles/engineering-manager-assistant/team-config.json`. Update it there if the team roster or repos change.
+- The EM assistant role (`~/work/personal/ai-engineering/agents/engineering-manager-assistant/`) is the source of truth for team context. Read `memories.md` at the start of each session for standing team knowledge.
+- Team context (GitHub org, repos, Jira project/domain) is read from the EM assistant role's `memories.md` and `AGENTS.md`. Update those files if the team roster or repos change.
 - If running mid-week, note the retro is a partial view and label it accordingly.
+
+## Local References
+
+If a `references/` directory exists next to this `SKILL.md`, load all `.md` files there
+before executing. Reference files may override defaults, add team-specific patterns,
+or provide additional links and context.
+
+```bash
+ls "$(dirname "$0")/references/"*.md 2>/dev/null
+```

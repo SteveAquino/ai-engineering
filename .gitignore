@@ -9,3 +9,6 @@
 .agents/roles/*/inbox/
 .agents/roles/*/logs/
 .agents/roles/scheduling-assistant/crontab.json
+
+# Team-specific skill overlays - never commit
+.agents/skills/*/references/
