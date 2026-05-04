@@ -108,7 +108,13 @@ _[DATE]_
 - Skill proposals should be concrete enough that a future `create-skill` invocation could use them directly as the brief
 - Be honest about friction — where things broke, where tools were missing, where the agent had to guess
 
-After writing, display the reflection and confirm it captures the session accurately.
+After writing, open the file in VS Code for immediate review:
+
+```bash
+code "$SESSION_DIR/files/session-reflection.md"
+```
+
+Then display the reflection in the conversation and confirm it captures the session accurately.
 
 ---
 
