@@ -255,23 +255,9 @@ elif total <= 7: label = "Moderate"
 elif total <= 11: label = "Heavy"
 else:            label = "Critical"
 
-# Summarize items per tier (first 3 per tier, joined with ·)
-def items_for(prefix, n=3):
-    matched = [t.lstrip(prefix).split("—")[0].strip() for t in tasks if t.startswith(prefix)]
-    return " · ".join(matched[:n]) or "none"
-
 new_workload = f"""## 🌡️ Workload
 
-> [!danger] 🔴 High — {high}
-> {items_for("🔴")}
-
-> [!warning] 🟡 Medium — {medium}
-> {items_for("🟡")}
-
-> [!tip] 🟢 Low — {low}
-> {items_for("🟢")}
-
-**Total open: {total}** &nbsp;·&nbsp; `{bar}` {label}"""
+🔴 **{high}** &nbsp;&nbsp;&nbsp; 🟡 **{medium}** &nbsp;&nbsp;&nbsp; 🟢 **{low}** &nbsp;&nbsp;&nbsp; · &nbsp;&nbsp;&nbsp; **{total} open** &nbsp;&nbsp; `{bar}` {label}"""
 
 # Replace between ## 🌡️ Workload and the next ## heading
 updated = re.sub(
