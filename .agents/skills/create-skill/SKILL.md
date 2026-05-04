@@ -8,7 +8,7 @@ description: Meta-skill for creating a new agent skill. Gathers the skill's purp
 Use this skill when you want to create a new agent skill from scratch.
 It will ask you what you want to build, classify the skill, scaffold the file, and land it in the right place.
 
-**Quality gate:** Before scaffolding, check `session-reflect/skill-proposal-rubric.md`. A skill should pass at least 4 of the 5 rubric gates. If it doesn't, suggest logging it as a `[skill-candidate]` memory entry instead and waiting for recurrence.
+**Quality gate:** Before scaffolding, check `session-reflect/docs/skill-proposal-rubric.md`. A skill should pass at least 4 of the 5 rubric gates. If it doesn't, suggest logging it as a `[skill-candidate]` memory entry instead and waiting for recurrence.
 
 ---
 
@@ -100,6 +100,20 @@ Do not proceed until approved.
 
 ## Phase 3 — Scaffold the Skill
 
+### Skill directory layout
+
+Every skill gets exactly one `SKILL.md` at the directory root. Use semantic subdirectories for everything else — never place additional files directly beside `SKILL.md`:
+
+| Path | Purpose | Committed? |
+|------|---------|------------|
+| `SKILL.md` | Skill definition | ✅ Yes |
+| `docs/` | Rubrics, templates, examples, supporting reference docs | ✅ Yes |
+| `references/` | Team/machine-specific overlays (org names, paths, project keys) | ❌ No (git-ignored) |
+
+Create `docs/` only if the skill has supporting documents to commit. Create `references/` and add a `## Local References` boilerplate to `SKILL.md` if the skill needs team-specific context.
+
+---
+
 ### If Personal Skill:
 
 **3a. Create the skill directory and file**
@@ -108,6 +122,8 @@ Do not proceed until approved.
 SKILL_NAME="<skill-name>"
 PERSONAL_SKILLS="<repo-root>/.agents/skills"
 mkdir -p "$PERSONAL_SKILLS/$SKILL_NAME"
+# Only create docs/ if this skill has supporting documents to commit:
+# mkdir -p "$PERSONAL_SKILLS/$SKILL_NAME/docs"
 ```
 
 Write `$PERSONAL_SKILLS/$SKILL_NAME/SKILL.md` with:

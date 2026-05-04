@@ -14,7 +14,9 @@ ai-engineering/
   .agents/
     skills/
       <skill-name>/
-        SKILL.md
+        SKILL.md          # skill definition — always at root, always committed
+        docs/             # committed supporting docs: rubrics, templates, examples
+        references/       # git-ignored team/machine-specific overlays
     roles/
       <role-name>/
         ROLE.md
@@ -23,6 +25,18 @@ ai-engineering/
         inbox/
         logs/
 ```
+
+### Skill directory layout
+
+Every skill directory has exactly one `SKILL.md` at its root. Supporting artifacts use semantic subdirectories to prevent clutter:
+
+| Path | Purpose | Committed? |
+|------|---------|------------|
+| `SKILL.md` | Skill definition and phases | ✅ Yes |
+| `docs/` | Rubrics, templates, reference docs, examples | ✅ Yes |
+| `references/` | Team- or machine-specific overlays (org names, project keys, local paths) | ❌ No (git-ignored) |
+
+**Rule:** Never place additional `.md` files directly beside `SKILL.md`. If a skill needs a supporting document, it goes in `docs/`. If it needs team context, it goes in `references/`.
 
 ## Why This Shape
 

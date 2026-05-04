@@ -135,7 +135,7 @@ For each memory in the "Potential Memories to Record" table, append it to the ch
 
 ## Phase 4 — Route Skill Proposals
 
-**Apply the quality rubric before proposing any skill.** Read `skill-proposal-rubric.md` (next to this SKILL.md) and score each candidate against the five gates. A candidate that passes 4+ gates is ready to propose. A candidate that passes fewer than 4 should be logged as a `[skill-candidate]` memory entry instead — not a proposal file.
+**Apply the quality rubric before proposing any skill.** Read `docs/skill-proposal-rubric.md` (in the `docs/` subdirectory next to this SKILL.md) and score each candidate against the five gates. A candidate that passes 4+ gates is ready to propose. A candidate that passes fewer than 4 should be logged as a `[skill-candidate]` memory entry instead — not a proposal file.
 
 **`[skill-candidate]` memory format** (for borderline/first-occurrence patterns):
 ```

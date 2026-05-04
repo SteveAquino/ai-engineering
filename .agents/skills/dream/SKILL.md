@@ -231,7 +231,7 @@ After reviewing memories, scan the current `memories.md` for `[skill-candidate]`
 grep -n "\[skill-candidate\]" .agents/roles/<ROLE_NAME>/memories.md
 ```
 
-Group candidates by concept proximity. For any concept with **2 or more independent entries**, apply the skill proposal rubric from `session-reflect/skill-proposal-rubric.md` and surface a finding:
+Group candidates by concept proximity. For any concept with **2 or more independent entries**, apply the skill proposal rubric from `session-reflect/docs/skill-proposal-rubric.md` and surface a finding:
 
 ```
 ## Skill Candidate Review
