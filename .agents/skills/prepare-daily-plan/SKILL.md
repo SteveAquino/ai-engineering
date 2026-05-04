@@ -131,38 +131,63 @@ gh pr list --state merged --json number,title,mergedAt,url \
 
 ---
 
-## Phase 2 — Synthesize the Plan
+## Phase 2 — Classify and Synthesize the Plan
 
-Review all gathered context and produce a prioritized daily plan. Structure it as follows:
+### Classification rubric
+
+Before writing the plan, evaluate every gathered item through this rubric:
+
+| Category | Criteria | Signal words |
+|----------|----------|--------------|
+| 🔴 **Do** | Only you can do it AND it needs to happen today (urgent, blocking others, time-sensitive) | blocked, CI failing, awaiting my review, deadline today, escalated |
+| 👥 **Delegate** | Someone else can or should handle it — or you're the wrong person for it right now | assign to, ping X, ask Y, needs design/QA/PM input |
+| 📅 **Schedule** | Important but not today — needs to happen but has no hard deadline today | backlog, low urgency, no blocker, on deck, future sprint |
+| 🗑 **Drop / Note** | Low-signal, stale, or purely informational — no action required | FYI, merged, closed, no changes needed |
+
+Apply this classification to every item from Phase 1. When in doubt between Do and Delegate, ask: "Is there anyone else who could unblock this?" If yes → Delegate.
+
+---
+
+### Output format
+
+Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets (not checkboxes — no action to complete).
 
 ```markdown
 # Daily Plan — <Day, Month Date Year>
 
-## 🔍 Top Priority
-<1–3 items that are highest urgency or highest leverage today. Be specific: include PR/ticket numbers and links.>
+## 🔴 Do Today
+> These require your direct attention today.
 
-## 👀 Needs Review
-<PRs or deliverables waiting on your attention. Include PR number, author, and link.>
+- [ ] <specific action> — <context: PR#, ticket key, or reason it's urgent> [<link>]
+- [ ] ...
 
-## 🚧 Unblock / Follow Up
-<Blocked tickets, stalled work, or items where a quick message/decision from you unblocks someone else.>
+## 👥 Delegate
+> Route these to the right person. Check the box once handed off.
 
-## 📋 In Progress
-<Active work items to continue or check in on today.>
+- [ ] Ask <person> to <action> — <why / context>
+- [ ] ...
 
-## 📌 On Deck
-<Lower-priority items to tackle if the above are clear, or to keep front of mind.>
+## 📅 Schedule
+> Important but not today. Check the box once it's on the calendar or backlog.
 
-## 📎 Context Notes
-<Anything notable from memories, recent merges, or patterns worth noting — e.g. sprint end approaching, team member OOO, etc. Omit if nothing notable.>
+- [ ] <action> — <why it matters, rough timeframe if known>
+- [ ] ...
+
+## 📎 Context & Notes
+> Informational — no action item, just useful awareness.
+
+- <observation, e.g. sprint ends Friday, PR #99 merged, team member OOO>
+- Email digest skipped — review Apple Mail directly.  ← include only if applicable
 ```
 
-Guidelines:
-- Be specific and actionable — every item should have a clear "what to do"
-- Include links/keys wherever available
-- Keep each section to ≤5 items; if there's more, pick the highest-signal ones
-- If a section has no items, omit it entirely
-- Sections with no data from any tool: note "no data available" rather than leaving blank
+### Synthesis guidelines
+
+- Every **Do Today** item must have a clear, single action. If an item is vague, break it into subtasks or move it to Schedule until it's scoped.
+- **Delegate** items should name a person or team if known. If unknown, name the function (e.g., "ask QA to verify").
+- **Schedule** items should include rough timing if inferable (e.g., "before end of sprint", "next week").
+- Keep each section to ≤6 items. If there's more, pick the highest-signal ones and fold the rest into a "and N more…" note.
+- Omit any section that has zero items — don't render empty headers.
+- Never invent items — only include things supported by data gathered in Phase 1.
 
 ---
 
