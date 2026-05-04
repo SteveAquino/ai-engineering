@@ -188,6 +188,7 @@ Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets 
 - Keep each section to ≤6 items. If there's more, pick the highest-signal ones and fold the rest into a "and N more…" note.
 - Omit any section that has zero items — don't render empty headers.
 - Never invent items — only include things supported by data gathered in Phase 1.
+- **Every external reference must be a hyperlink — no exceptions.** Jira tickets, GitHub PRs, issues, and any other external resource must be linked inline where they first appear. Plain-text keys like `TEC-1234` or `#99` with no link are not acceptable in the output.
 
 ---
 
