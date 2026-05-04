@@ -7,6 +7,10 @@ description: Append a timestamped memory entry to a role's memories.md file. Kee
 
 Use this skill to record something worth keeping across sessions for a specific role. The memory is appended to the role's `memories.md` file and will be loaded the next time `assume-role` is invoked for that role.
 
+## Path Resolution
+
+Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands.
+
 ---
 
 ## Phase 0 — What to Remember
@@ -27,7 +31,7 @@ Determine the target role:
 2. **Use `ask_user`:**
    > "Which role should this memory belong to?"
 
-   Choices: list of discovered role names from `ls -d ~/.agents/roles/*/`
+   Choices: list of discovered role names from `ls -d .agents/roles/*/`
    
    If a default was identified in step 1, list it first with "(current session role)" appended.
 
@@ -109,4 +113,4 @@ Choices: `["Yes — consolidate now", "Not yet"]`
 
 - To view all memories for a role: invoke `manage-role` → "View memories"
 - To load memories into the current session: invoke `assume-role`
-- Roles directory: `~/.agents/roles/`
+- Roles directory: `.agents/roles/`

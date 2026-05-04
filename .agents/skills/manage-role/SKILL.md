@@ -7,6 +7,10 @@ description: Maintain an existing role persona. View or edit instructions, view 
 
 Use this skill to inspect or maintain an existing role persona. Useful for refining instructions over time, reviewing accumulated memories, or cleaning up old roles.
 
+## Path Resolution
+
+Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands.
+
 ---
 
 ## Phase 0 — Select Role
@@ -14,11 +18,11 @@ Use this skill to inspect or maintain an existing role persona. Useful for refin
 List available roles:
 
 ```bash
-ls -d ~/.agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
+ls -d .agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `~/.agents/roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `.agents/roles/`. Use the `create-role` skill to define your first role."
 Stop here.
 
 **Use `ask_user`:**
@@ -47,7 +51,7 @@ Choices:
 ## Action: View Instructions
 
 ```bash
-cat ~/.agents/roles/<ROLE_NAME>/ROLE.md
+cat .agents/roles/<ROLE_NAME>/ROLE.md
 ```
 
 Display the full contents. Offer to edit afterward:
@@ -73,7 +77,7 @@ After all sections, write the updated file and display the result.
 ## Action: View Memories
 
 ```bash
-cat ~/.agents/roles/<ROLE_NAME>/memories.md
+cat .agents/roles/<ROLE_NAME>/memories.md
 ```
 
 Display the full contents. Then ask:
@@ -87,7 +91,7 @@ Choices: `["Consolidate memories", "Done"]`
 
 Count entries:
 ```bash
-grep -c "^### " ~/.agents/roles/<ROLE_NAME>/memories.md
+grep -c "^### " .agents/roles/<ROLE_NAME>/memories.md
 ```
 
 Display the count. Then:
@@ -127,12 +131,12 @@ Allow freeform.
 Check if the new name already exists. If so, warn and abort.
 
 ```bash
-mv ~/.agents/roles/<ROLE_NAME> ~/.agents/roles/<NEW_NAME>
+mv .agents/roles/<ROLE_NAME> .agents/roles/<NEW_NAME>
 ```
 
 Confirm:
 ```bash
-ls ~/.agents/roles/
+ls .agents/roles/
 ```
 
 ---
@@ -145,20 +149,20 @@ Choices: `["Yes — delete it", "Cancel"]`
 
 If confirmed:
 ```bash
-rm -rf ~/.agents/roles/<ROLE_NAME>
+rm -rf .agents/roles/<ROLE_NAME>
 echo "Role '$ROLE_NAME' deleted."
 ```
 
 Confirm the deletion:
 ```bash
-ls ~/.agents/roles/
+ls .agents/roles/
 ```
 
 ---
 
 ## Reference
 
-- Roles directory: `~/.agents/roles/`
+- Roles directory: `.agents/roles/`
 - To create a new role: invoke `create-role`
 - To assume a role: invoke `assume-role`
 - To append a new memory: invoke `remember`

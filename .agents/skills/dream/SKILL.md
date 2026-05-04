@@ -13,6 +13,10 @@ Memories naturally accumulate two kinds of content:
 
 The existing `manage-role` → `Consolidate memories` compresses by age. This skill consolidates by **quality** — discriminating what should survive long-term from what was useful in the moment.
 
+## Path Resolution
+
+Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands.
+
 ---
 
 ## Phase 0 — Intake
@@ -20,14 +24,14 @@ The existing `manage-role` → `Consolidate memories` compresses by age. This sk
 ### 0a — Select role
 
 ```bash
-ls -d ~/.agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
+ls -d .agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
 ```
 
 **Use `ask_user`:**
 > "Which role should we dream for?"
 Choices: list of discovered role names.
 
-Store as `ROLE_NAME`. Verify `~/.agents/roles/<ROLE_NAME>/memories.md` exists; abort if not.
+Store as `ROLE_NAME`. Verify `.agents/roles/<ROLE_NAME>/memories.md` exists; abort if not.
 
 ### 0b — Set scope
 
@@ -41,7 +45,7 @@ Choices:
 
 Store as `SCOPE`.
 
-Read `~/.agents/roles/<ROLE_NAME>/sessions.md` to get the list of session IDs. Apply the scope filter:
+Read `.agents/roles/<ROLE_NAME>/sessions.md` to get the list of session IDs. Apply the scope filter:
 - "All sessions" → use all rows
 - "Since last dream" → look for a `[dream]` marker in sessions.md; use rows after it. If no marker, fall back to all.
 - "Last N sessions" → use the N most recent rows (by date, newest-first in the table)
@@ -57,8 +61,8 @@ Read the raw material for the synthesis subagent.
 ### 1a — Role context
 
 ```bash
-cat ~/.agents/roles/<ROLE_NAME>/ROLE.md
-cat ~/.agents/roles/<ROLE_NAME>/memories.md
+cat .agents/roles/<ROLE_NAME>/ROLE.md
+cat .agents/roles/<ROLE_NAME>/memories.md
 ```
 
 ### 1b — Session checkpoints
@@ -207,7 +211,7 @@ Here's the proposed new memories.md:
 ```
 
 **Use `ask_user`:**
-> "Ready to write this to `~/.agents/roles/<ROLE_NAME>/memories.md`?"
+> "Ready to write this to `.agents/roles/<ROLE_NAME>/memories.md`?"
 Choices:
 - `Write it — looks good`
 - `Make changes first`
@@ -224,14 +228,14 @@ If "Discard": confirm and stop. The current `memories.md` is unchanged.
 1. Back up the current file:
 
 ```bash
-cp ~/.agents/roles/<ROLE_NAME>/memories.md \
-   ~/.agents/roles/<ROLE_NAME>/memories.md.pre-dream-$(date +%Y%m%d)
+cp .agents/roles/<ROLE_NAME>/memories.md \
+   .agents/roles/<ROLE_NAME>/memories.md.pre-dream-$(date +%Y%m%d)
 ```
 
 2. Write the new content:
 
 ```bash
-cat > ~/.agents/roles/<ROLE_NAME>/memories.md << 'DREAM_EOF'
+cat > .agents/roles/<ROLE_NAME>/memories.md << 'DREAM_EOF'
 <DREAM_OUTPUT>
 DREAM_EOF
 ```
@@ -239,13 +243,13 @@ DREAM_EOF
 3. Mark the dream in `sessions.md` by appending a marker row:
 
 ```bash
-echo "| $(date +%Y-%m-%d) | — | [dream completed] |" >> ~/.agents/roles/<ROLE_NAME>/sessions.md
+echo "| $(date +%Y-%m-%d) | — | [dream completed] |" >> .agents/roles/<ROLE_NAME>/sessions.md
 ```
 
 4. Confirm:
 
 ```bash
-cat ~/.agents/roles/<ROLE_NAME>/memories.md
+cat .agents/roles/<ROLE_NAME>/memories.md
 ```
 
 Show the user the final state and the backup file path.
@@ -266,4 +270,4 @@ Show the user the final state and the backup file path.
 - `assume-role` — load a role's instructions and memories into a session
 - `remember` — append a new memory entry to a role
 - `manage-role` → "Consolidate memories" — lighter, date-based consolidation
-- Roles directory: `~/.agents/roles/`
+- Roles directory: `.agents/roles/`

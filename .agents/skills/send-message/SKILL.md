@@ -14,7 +14,7 @@ Drop a plain-English message into any agent's inbox. You don't need to know the 
 List available agents:
 
 ```bash
-ls -d ~/.agents/roles/*/  2>/dev/null | xargs -I{} basename {}
+ls -d .agents/roles/*/  2>/dev/null | xargs -I{} basename {}
 ```
 
 **Use `ask_user`:**
@@ -60,7 +60,7 @@ CURRENT_ROLE = "<CURRENT_ROLE>"  # from active assume-role session, or "unknown"
 TARGET_AGENT = "<TARGET_AGENT>"
 MESSAGE_BODY = "<MESSAGE_BODY>"
 
-inbox = os.path.expanduser(f"~/.agents/roles/{TARGET_AGENT}/inbox")
+inbox = os.path.expanduser(f".agents/roles/{TARGET_AGENT}/inbox")
 os.makedirs(inbox, exist_ok=True)
 
 ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

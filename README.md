@@ -65,7 +65,29 @@ This lets the portable skills stay generic while still giving the agent useful l
 
 When a local reference becomes broadly useful and employer-neutral, promote it into a committed skill or role update. Until then, keep it in ignored role memory.
 
-## Tool Setup
+## First-Time Setup: Local Path Configuration
+
+After cloning, create the git-ignored path config file that role-related skills read to resolve absolute paths on this machine:
+
+```bash
+# macOS/Linux
+REPO="$HOME/path/to/ai-engineering"
+mkdir -p "$REPO/.agents/references"
+cat > "$REPO/.agents/references/local.md" << 'EOF'
+# Local Machine Paths
+AGENTS_DIR=/absolute/path/to/ai-engineering/.agents
+ROLES_DIR=/absolute/path/to/ai-engineering/.agents/roles
+SKILLS_DIR=/absolute/path/to/ai-engineering/.agents/skills
+EOF
+```
+
+Replace `/absolute/path/to/ai-engineering` with the actual clone location. This file is gitignored — every machine needs its own copy.
+
+Skills such as `assume-role`, `create-role`, `list-roles`, `manage-role`, `remember`, and `dream` read `ROLES_DIR` from this file before executing path-dependent commands.
+
+---
+
+
 
 ### Codex
 

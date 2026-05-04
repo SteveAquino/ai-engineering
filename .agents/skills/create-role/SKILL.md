@@ -7,6 +7,10 @@ description: Interactively define a new role persona. Gathers name, purpose, goa
 
 Use this skill to define a new persistent role persona. Roles are used by `assume-role` to brief an agent session with specific instructions and accumulated memories.
 
+## Path Resolution
+
+Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands. If that file does not exist, tell the user to create it — it defines `ROLES_DIR` as an absolute path for this machine.
+
 ---
 
 ## Phase 0 — Gather Role Identity
@@ -18,7 +22,7 @@ Allow freeform. Validate it's kebab-case (lowercase, hyphens only). Store as `RO
 
 Check if the role already exists:
 ```bash
-ls ~/.agents/roles/<ROLE_NAME>/ 2>/dev/null
+ls .agents/roles/<ROLE_NAME>/ 2>/dev/null
 ```
 
 If it exists, warn the user and ask:
@@ -72,7 +76,7 @@ If "Make changes", loop back to Phase 1 for the section the user wants to revise
 ## Phase 3 — Scaffold the Role
 
 ```bash
-ROLE_DIR="$HOME/.agents/roles/<ROLE_NAME>"
+ROLE_DIR=".agents/roles/<ROLE_NAME>"
 mkdir -p "$ROLE_DIR"
 ```
 
@@ -81,13 +85,13 @@ Write `$ROLE_DIR/ROLE.md` with the confirmed content from Phase 2.
 ```bash
 # Initialize empty memories and sessions files
 ROLE_NAME="<ROLE_NAME>"
-printf '## Recent\n\n' > "$HOME/.agents/roles/$ROLE_NAME/memories.md"
-printf '# Sessions: %s\n\n| Date | Session ID | Label |\n|---|---|---|\n' "$ROLE_NAME" > "$HOME/.agents/roles/$ROLE_NAME/sessions.md"
+printf '## Recent\n\n' > ".agents/roles/$ROLE_NAME/memories.md"
+printf '# Sessions: %s\n\n| Date | Session ID | Label |\n|---|---|---|\n' "$ROLE_NAME" > ".agents/roles/$ROLE_NAME/sessions.md"
 ```
 
 Confirm:
 ```bash
-ls -la ~/.agents/roles/<ROLE_NAME>/
+ls -la .agents/roles/<ROLE_NAME>/
 ```
 
 ---
@@ -104,7 +108,7 @@ If "Yes", invoke the `assume-role` skill, passing `<ROLE_NAME>` as the target ro
 
 ## Reference
 
-- Roles directory: `~/.agents/roles/`
+- Roles directory: `.agents/roles/`
 - To switch roles later: invoke `assume-role`
 - To view all roles: invoke `list-roles`
 - To update role instructions later: invoke `manage-role`

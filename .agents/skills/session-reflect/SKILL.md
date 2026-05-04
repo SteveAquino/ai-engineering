@@ -122,7 +122,7 @@ If yes: follow the `remember` skill flow.
 
 ```bash
 # List available roles
-ls ~/.agents/roles/
+ls .agents/roles/
 ```
 
 For each memory in the "Potential Memories to Record" table, append it to the chosen role's `memories.md` with a timestamp. Follow the same format as the `remember` skill:
@@ -191,6 +191,6 @@ Suggest next steps:
 ## Reference
 
 - Session state (Copilot CLI): `~/.copilot/session-state/<SESSION_ID>/`
-- Roles: `~/.agents/roles/`
+- Roles: `.agents/roles/`
 - Memory routing: invoke `remember` skill
 - Skill creation: invoke `create-skill` skill with a proposal file as the brief

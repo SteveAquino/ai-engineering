@@ -18,7 +18,7 @@ If a role was passed from a calling context (e.g., a cron job or `process-inbox`
 Otherwise, list available roles and ask:
 
 ```bash
-ls -d ~/.agents/roles/*/ | xargs -I{} basename {}
+ls -d .agents/roles/*/ | xargs -I{} basename {}
 ```
 
 **Use `ask_user`:**
@@ -40,13 +40,13 @@ DATE=$(date +%Y%m%d)
 Read the role's `ROLE.md` to understand its priorities and goals:
 
 ```bash
-cat ~/.agents/roles/$TARGET_ROLE/ROLE.md
+cat .agents/roles/$TARGET_ROLE/ROLE.md
 ```
 
 If `memories.md` exists and is non-empty, read it for recent context:
 
 ```bash
-cat ~/.agents/roles/$TARGET_ROLE/memories.md
+cat .agents/roles/$TARGET_ROLE/memories.md
 ```
 
 Use the role's purpose and goals to guide what "important" means when prioritizing the plan.
@@ -157,7 +157,7 @@ Write the plan to the target role's inbox:
 import os, datetime
 
 TARGET_ROLE = "<TARGET_ROLE>"
-INBOX = os.path.expanduser(f"~/.agents/roles/{TARGET_ROLE}/inbox")
+INBOX = os.path.expanduser(f".agents/roles/{TARGET_ROLE}/inbox")
 os.makedirs(INBOX, exist_ok=True)
 
 date_str = datetime.date.today().strftime("%Y%m%d")
@@ -190,7 +190,7 @@ Example:
    PRs: 4 open (2 awaiting review, 1 approved, 1 stalled)
    Tickets: 6 found via read-jira-ticket skill (1 blocked, 3 in progress)
    Issues: gh not available in this context
-   Written to: ~/.agents/roles/engineering-manager-assistant/inbox/20260428-daily-plan.md
+   Written to: .agents/roles/engineering-manager-assistant/inbox/20260428-daily-plan.md
 ```
 
 ---

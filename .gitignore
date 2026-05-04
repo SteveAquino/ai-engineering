@@ -12,3 +12,6 @@
 
 # Team-specific skill overlays - never commit
 .agents/skills/*/references/
+
+# Machine-specific path config - create locally after cloning
+.agents/references/local.md

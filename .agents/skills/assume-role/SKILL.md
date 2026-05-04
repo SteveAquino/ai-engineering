@@ -1,11 +1,15 @@
 ---
 name: assume-role
-description: Brief the current agent session with a role persona. Reads the role's ROLE.md and memories.md from ~/.agents/roles/ and injects them as a structured briefing into the conversation. No restart required — works mid-session.
+description: Brief the current agent session with a role persona. Reads the role's ROLE.md and memories.md from the roles directory and injects them as a structured briefing into the conversation. No restart required — works mid-session.
 ---
 
 # Skill: Assume Role
 
 Use this skill to steer the current session to operate under a specific role persona. The role's instructions and accumulated memories are injected directly into the conversation. No environment variables or restarts required.
+
+## Path Resolution
+
+Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands. If that file does not exist, tell the user to create it using `.agents/references/local.md` as a template (it defines `ROLES_DIR`, `SKILLS_DIR`, and `AGENTS_DIR` as absolute paths for this machine).
 
 ---
 
@@ -14,11 +18,11 @@ Use this skill to steer the current session to operate under a specific role per
 List all role directories:
 
 ```bash
-ls -d ~/.agents/roles/*/  2>/dev/null | xargs -I{} basename {}
+ls -d .agents/roles/*/  2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `~/.agents/roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `.agents/roles/`. Use the `create-role` skill to define your first role."
 Stop here.
 
 ---
@@ -44,7 +48,7 @@ Check how many session entries exist for the chosen role:
 
 ```bash
 # Count data rows (exclude header lines starting with | Date or |---|)
-grep -c "^| 20" ~/.agents/roles/<ROLE_NAME>/sessions.md 2>/dev/null || echo 0
+grep -c "^| 20" .agents/roles/<ROLE_NAME>/sessions.md 2>/dev/null || echo 0
 ```
 
 If **0 entries** — skip to Phase 2 (fresh session, no prior context to resume).
@@ -59,7 +63,7 @@ Choices: `["Resume previous session", "Start a fresh session"]`
 If **2+ entries** — show the full sessions table and let the user pick:
 
 ```bash
-cat ~/.agents/roles/<ROLE_NAME>/sessions.md
+cat .agents/roles/<ROLE_NAME>/sessions.md
 ```
 
 **Use `ask_user`:**
@@ -77,7 +81,7 @@ If starting fresh, proceed — a new entry will be logged in Phase 3.
 ## Phase 2 — Load Role Files
 
 ```bash
-ROLE_DIR="$HOME/.agents/roles/<ROLE_NAME>"
+ROLE_DIR=".agents/roles/<ROLE_NAME>"
 
 # Verify the role exists
 if [[ ! -d "$ROLE_DIR" ]]; then
@@ -103,12 +107,12 @@ Append a new entry to the role's `sessions.md`. Ask for an optional label first:
 
 Allow freeform. If the user skips or provides nothing, use `(no label)`.
 
-Append a new row to `~/.agents/roles/<ROLE_NAME>/sessions.md`:
+Append a new row to `.agents/roles/<ROLE_NAME>/sessions.md`:
 
 ```bash
 DATE=$(date +%Y-%m-%d)
 # Append row: | date | session-id | label |
-echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> ~/.agents/roles/<ROLE_NAME>/sessions.md
+echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> .agents/roles/<ROLE_NAME>/sessions.md
 ```
 
 The session ID is available from the current session context.
@@ -122,7 +126,7 @@ Before delivering the briefing, check for pending inbox messages:
 ```python
 import os, glob
 ROLE_NAME = "<ROLE_NAME>"
-inbox = os.path.expanduser(f"~/.agents/roles/{ROLE_NAME}/inbox")
+inbox = os.path.expanduser(f".agents/roles/{ROLE_NAME}/inbox")
 files = sorted(glob.glob(os.path.join(inbox, "*.md"))) if os.path.exists(inbox) else []
 print(f"Pending inbox messages: {len(files)}")
 for f in files:
@@ -172,7 +176,7 @@ After delivering the briefing, begin responding in character as the role — app
 
 ## Reference
 
-- Roles directory: `~/.agents/roles/`
+- Roles directory: `.agents/roles/`
 - To create a new role: invoke `create-role`
 - To view all roles and session history: invoke `list-roles`
 - To re-brief after `/compact`: invoke `assume-role` again

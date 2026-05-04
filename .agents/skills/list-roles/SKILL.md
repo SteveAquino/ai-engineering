@@ -1,22 +1,26 @@
 ---
 name: list-roles
-description: Show all available role personas in ~/.agents/roles/, their purpose, and saved session IDs for resuming. Quick overview of the role system.
+description: Show all available role personas in .agents/roles/, their purpose, and saved session IDs for resuming. Quick overview of the role system.
 ---
 
 # Skill: List Roles
 
 Use this skill to see all available role personas and their current state.
 
+## Path Resolution
+
+Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands.
+
 ---
 
 ## Phase 0 — Discover Roles
 
 ```bash
-ls -d ~/.agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
+ls -d .agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `~/.agents/roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `.agents/roles/`. Use the `create-role` skill to define your first role."
 Stop here.
 
 ---
@@ -80,5 +84,5 @@ To manage a role:      invoke manage-role
 
 ## Reference
 
-- Roles directory: `~/.agents/roles/`
+- Roles directory: `.agents/roles/`
 - Sessions are saved automatically when you invoke `assume-role`

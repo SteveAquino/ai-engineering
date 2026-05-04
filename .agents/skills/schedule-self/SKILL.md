@@ -86,7 +86,7 @@ Otherwise, add the self-check entry to `crontab.json` as a special job:
 
 ```python
 import json, os, datetime
-path = os.path.expanduser("~/.agents/roles/scheduling-assistant/crontab.json")
+path = os.path.expanduser(".agents/roles/scheduling-assistant/crontab.json")
 data = json.load(open(path)) if os.path.exists(path) else {"jobs": []}
 jobs = data.get("jobs", [])
 
