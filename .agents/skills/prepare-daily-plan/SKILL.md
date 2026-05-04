@@ -257,7 +257,8 @@ else:            label = "Critical"
 
 new_workload = f"""## 🌡️ Workload
 
-🔴 **{high}** &nbsp;&nbsp;&nbsp; 🟡 **{medium}** &nbsp;&nbsp;&nbsp; 🟢 **{low}** &nbsp;&nbsp;&nbsp; · &nbsp;&nbsp;&nbsp; **{total} open** &nbsp;&nbsp; `{bar}` {label}"""
+| 🔴 **{high}** | 🟡 **{medium}** | 🟢 **{low}** | **{total} open** — `{bar}` {label} |
+|---|---|---|---|"""
 
 # Replace between ## 🌡️ Workload and the next ## heading
 updated = re.sub(
