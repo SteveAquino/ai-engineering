@@ -101,6 +101,23 @@ Look for:
 
 If no ticket-reading skill is available, note it and skip.
 
+### 1e. Email Digest (optional signal)
+
+If the `read-apple-mail` skill is available, invoke it for an unread mail summary:
+
+```bash
+ls .agents/skills/read-apple-mail/SKILL.md 2>/dev/null && echo "available" || echo "unavailable"
+```
+
+If available, invoke it as a sub-skill. Its output is an email digest (subject lines, senders, suggested todos) — incorporate flagged action items into the plan's **Top Priority** or **Needs Review** sections.
+
+If `read-apple-mail` returns `skipped-no-consent` or `skipped-sensitive`, include a note in the plan:
+> "Email digest skipped (consent or sensitivity check). Review Apple Mail directly."
+
+If unavailable or if the skill returns `error-*`, skip silently.
+
+---
+
 ### 1d. Recent Activity (optional signal)
 
 Scan for anything that happened since yesterday that may need follow-up:
@@ -172,6 +189,16 @@ print(f"✅ Daily plan written to inbox: {filename}")
 ```
 
 If a daily plan file for today already exists, overwrite it — this skill may run multiple times in a day.
+
+### Phase 3b — Obsidian Sync (optional)
+
+If the `obsidian-vault` skill is available and `DAILY_PLAN_NOTE_PATH` is configured in that skill's `references/local.md`, invoke `obsidian-vault` to write the plan there too:
+
+- **operation:** `write-note`
+- **path:** `DAILY_PLAN_NOTE_PATH` (e.g. `Daily Notes/<YYYY>-<MM>-<DD>.md`)
+- **content:** the plan markdown from Phase 2
+
+This makes the Obsidian vault the durable source of truth while the inbox copy drives `process-inbox` actions. If the vault skill is unavailable or not configured, skip silently.
 
 ---
 
