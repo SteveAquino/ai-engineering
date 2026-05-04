@@ -227,6 +227,65 @@ If the `obsidian-vault` skill is available and `DAILY_PLAN_NOTE_PATH` is configu
 
 This makes the Obsidian vault the durable source of truth while the inbox copy drives `process-inbox` actions. If the vault skill is unavailable or not configured, skip silently.
 
+### Phase 3c — Update Welcome.md Workload Meter (optional)
+
+If `VAULT_PATH` is available (from `references/local.md` or the `obsidian-vault` skill), update the Workload Meter section in `Welcome.md`.
+
+Read the open action items (lines starting with `- [ ]`) from `Welcome.md`, count by priority prefix (`🔴` / `🟡` / `🟢`), then rewrite the Workload section:
+
+```python
+import re
+
+VAULT_PATH = "<from references/local.md>"
+welcome_path = f"{VAULT_PATH}/Welcome.md"
+
+content = open(welcome_path).read()
+tasks = re.findall(r"- \[ \] (.+)", content)
+high   = sum(1 for t in tasks if t.startswith("🔴"))
+medium = sum(1 for t in tasks if t.startswith("🟡"))
+low    = sum(1 for t in tasks if t.startswith("🟢"))
+total  = len(tasks)
+
+# Build bar (scale: 15 max = full bar of 15 █)
+filled = min(round(total / 15 * 15), 15)
+bar = "█" * filled + "░" * (15 - filled)
+
+if total <= 3:   label = "Light"
+elif total <= 7: label = "Moderate"
+elif total <= 11: label = "Heavy"
+else:            label = "Critical"
+
+# Summarize items per tier (first 3 per tier, joined with ·)
+def items_for(prefix, n=3):
+    matched = [t.lstrip(prefix).split("—")[0].strip() for t in tasks if t.startswith(prefix)]
+    return " · ".join(matched[:n]) or "none"
+
+new_workload = f"""## 🌡️ Workload
+
+> [!danger] 🔴 High — {high}
+> {items_for("🔴")}
+
+> [!warning] 🟡 Medium — {medium}
+> {items_for("🟡")}
+
+> [!tip] 🟢 Low — {low}
+> {items_for("🟢")}
+
+**Total open: {total}** &nbsp;·&nbsp; `{bar}` {label}"""
+
+# Replace between ## 🌡️ Workload and the next ## heading
+updated = re.sub(
+    r"## 🌡️ Workload.*?(?=\n## |\Z)",
+    new_workload + "\n\n",
+    content,
+    flags=re.DOTALL
+)
+open(welcome_path, "w").write(updated)
+print(f"✅ Workload meter updated: {total} open ({high}🔴 {medium}🟡 {low}🟢) — {label}")
+```
+
+If `Welcome.md` doesn't exist or the Workload section is missing, skip silently.
+
 ---
 
 ## Phase 4 — Confirm
