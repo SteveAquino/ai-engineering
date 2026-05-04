@@ -24,6 +24,9 @@ ai-engineering/
         sessions.md
         inbox/
         logs/
+        skills/           # role-specific skills, auto-loaded by assume-role
+          <skill-name>/
+            SKILL.md
 ```
 
 ### Skill directory layout

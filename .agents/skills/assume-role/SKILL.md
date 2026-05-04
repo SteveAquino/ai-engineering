@@ -92,9 +92,13 @@ fi
 cat "$ROLE_DIR/ROLE.md"
 echo "---MEMORIES---"
 cat "$ROLE_DIR/memories.md"
+echo "---SKILLS---"
+ls "$ROLE_DIR/skills/" 2>/dev/null | grep -v "^$" || echo "(none)"
 ```
 
 Read both files. If `memories.md` is empty or only contains the `## Recent` header, note that there are no memories yet — omit the memories section from the briefing rather than showing an empty block.
+
+If `skills/` exists, read each `SKILL.md` inside it to understand what role-specific skills are available — they will be listed in the briefing and are active for this session.
 
 ---
 
@@ -154,6 +158,12 @@ I am now operating as the **`<ROLE_NAME>`** persona.
 ### Active Memories
 
 <full contents of memories.md — omit this section if memories.md is empty>
+
+### 🛠 Role Skills
+
+<list of role-specific skills found in `.agents/roles/<ROLE_NAME>/skills/`, each with its one-line description from frontmatter — omit this section if no skills directory exists>
+
+These skills are active for this session and can be invoked by name.
 
 ### 📬 Pending Inbox (`<N> message(s)`)
 

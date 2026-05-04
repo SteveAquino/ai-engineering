@@ -33,15 +33,20 @@ For skills that encode org-specific workflows, use internal tools, or reference 
 
 **Signals:** uses internal CLI tooling; references org-specific services, ticket projects, or internal docs; uses employer-specific environment paths.
 
-### 3. Role-specific instructions - this repo's `.agents/roles/<role-name>/ROLE.md`
-Not a skill — these are persona briefings loaded by `assume-role`. If what's being built is a persistent assistant persona (purpose, goals, communication style), guide the user to `create-role` instead of `create-skill`.
+### 3. Role-specific skills — `.agents/roles/<role-name>/skills/`
+Skills that are specific to one role's workflow and most useful in the context of that role. They live alongside the role and are automatically surfaced in the briefing when `assume-role` loads that role.
+
+**Signals:** designed to be invoked primarily when operating as a specific role; encodes a workflow meaningful to that role's goals; not necessarily useful outside that role's context.
+
+### 4. Role persona — `.agents/roles/<role-name>/ROLE.md` via `create-role`
+Not a skill — these are persona briefings. If what's being built is a persistent assistant persona (purpose, goals, communication style), guide the user to `create-role` instead of `create-skill`.
 
 **Signals:** describes a "role", "assistant", "persona", or "mode of operation" rather than a discrete task.
 
 ### When ambiguous
 Ask the user directly:
-> "Should this skill go in your personal skills library (portable, any project) or somewhere else?"
-Choices: `["Personal library", "Somewhere else — I'll provide the path"]`
+> "Where should this skill live?"
+Choices: `["Personal library (portable)", "Under a specific role", "Employer/project repo — I'll provide the path"]`
 
 **Default lean:** personal if in doubt — easier to move later.
 

@@ -25,7 +25,7 @@ Allow freeform. Capture: purpose, likely inputs, likely outputs, and any tools o
 
 ## Phase 1 — Classify: Where Does This Skill Live?
 
-Evaluate the skill description and determine its destination. There are three possibilities.
+Evaluate the skill description and determine its destination. There are four possibilities.
 
 ### Is this actually a role, not a skill?
 
@@ -39,12 +39,29 @@ Choices: `["Yes — create a role", "No — it's still a skill"]`
 
 ---
 
-### Personal/portable skill -> this repo's `.agents/skills/`
+### Personal/portable skill → this repo's `.agents/skills/`
 
 **Signals (all of these → personal skill):**
 - Uses only general OS/CLI tools (`git`, `gh`, `bash`, `afplay`, `brew`, etc.)
 - Would be useful at any company or on any project
 - No references to internal services, proprietary tooling, or org-specific workflows
+
+---
+
+### Role-specific skill → `.agents/roles/<role-name>/skills/`
+
+Skills that are specific to one role's workflow and make most sense loaded alongside that role's instructions. These are committed alongside the role and automatically surfaced when `assume-role` loads that role.
+
+**Signals:**
+- Designed to be invoked primarily when operating as a specific role
+- Encodes a workflow that's meaningful in the context of that role's goals
+- Not necessarily useful outside that role's operating context
+
+**If so:** ask which role it belongs to:
+> "Which role should this skill live under?"
+Choices: list of role names from `.agents/roles/`
+
+Store as `$ROLE_NAME`. Skill will be created at `.agents/roles/$ROLE_NAME/skills/<skill-name>/SKILL.md`.
 
 ---
 
@@ -67,12 +84,12 @@ Allow freeform. Store as `$GITHUB_REPO`.
 
 ### When ambiguous
 
-If it's unclear whether the skill is personal or employer-specific, **always ask**:
+If it's unclear which destination applies, **always ask**:
 
 **Use `ask_user`:**
-> "Should this skill go in your personal skills library (portable, any project) or somewhere else?"
+> "Where should this skill live?"
 
-Choices: `["Personal library", "Somewhere else — I'll provide the path"]`
+Choices: `["Personal library (portable)", "Under a specific role", "Employer/project repo — I'll provide the path"]`
 
 **Default lean:** personal if genuinely unsure — easier to move later.
 
@@ -148,6 +165,34 @@ cat "$PERSONAL_SKILLS/$SKILL_NAME/SKILL.md"
 ```
 
 Present the created file to the user and confirm it looks right.
+
+---
+
+### If Role-Specific Skill:
+
+**3a. Create the skill directory under the role**
+
+```bash
+SKILL_NAME="<skill-name>"
+ROLE_SKILLS="<repo-root>/.agents/roles/$ROLE_NAME/skills"
+mkdir -p "$ROLE_SKILLS/$SKILL_NAME"
+```
+
+Write `$ROLE_SKILLS/$SKILL_NAME/SKILL.md` with:
+- Frontmatter (`name`, `description`)
+- Content based on the approved design from Phase 2
+- Phase-driven structure with `ask_user` before destructive actions
+
+The skill will be automatically surfaced when `assume-role` loads `$ROLE_NAME`.
+
+**3b. Confirm**
+
+```bash
+cat "$ROLE_SKILLS/$SKILL_NAME/SKILL.md"
+ls "$ROLE_SKILLS/"
+```
+
+No skills index update needed — role skills are discovered from the `skills/` directory at briefing time.
 
 ---
 
