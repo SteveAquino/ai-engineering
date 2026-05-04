@@ -31,7 +31,7 @@ ls -d .agents/roles/*/ 2>/dev/null | xargs -I{} basename {}
 > "Which role should we dream for?"
 Choices: list of discovered role names.
 
-Store as `ROLE_NAME`. Verify `.agents/roles/<ROLE_NAME>/memories.md` exists; abort if not.
+Store as `ROLE_NAME`. Verify `.agents/roles/<ROLE_NAME>/state/memories.md` exists; abort if not.
 
 ### 0b — Set scope
 
@@ -45,7 +45,7 @@ Choices:
 
 Store as `SCOPE`.
 
-Read `.agents/roles/<ROLE_NAME>/sessions.md` to get the list of session IDs. Apply the scope filter:
+Read `.agents/roles/<ROLE_NAME>/state/sessions.md` to get the list of session IDs. Apply the scope filter:
 - "All sessions" → use all rows
 - "Since last dream" → look for a `[dream]` marker in sessions.md; use rows after it. If no marker, fall back to all.
 - "Last N sessions" → use the N most recent rows (by date, newest-first in the table)
@@ -62,7 +62,7 @@ Read the raw material for the synthesis subagent.
 
 ```bash
 cat .agents/roles/<ROLE_NAME>/ROLE.md
-cat .agents/roles/<ROLE_NAME>/memories.md
+cat .agents/roles/<ROLE_NAME>/state/memories.md
 ```
 
 ### 1b — Session checkpoints
@@ -211,7 +211,7 @@ Here's the proposed new memories.md:
 ```
 
 **Use `ask_user`:**
-> "Ready to write this to `.agents/roles/<ROLE_NAME>/memories.md`?"
+> "Ready to write this to `.agents/roles/<ROLE_NAME>/state/memories.md`?"
 Choices:
 - `Write it — looks good`
 - `Make changes first`
@@ -228,7 +228,7 @@ If "Discard": confirm and stop. The current `memories.md` is unchanged.
 After reviewing memories, scan the current `memories.md` for `[skill-candidate]` entries:
 
 ```bash
-grep -n "\[skill-candidate\]" .agents/roles/<ROLE_NAME>/memories.md
+grep -n "\[skill-candidate\]" .agents/roles/<ROLE_NAME>/state/memories.md
 ```
 
 Group candidates by concept proximity. For any concept with **2 or more independent entries**, apply the skill proposal rubric from `session-reflect/docs/skill-proposal-rubric.md` and surface a finding:
@@ -254,14 +254,14 @@ Present findings to the user after the memories review. Do not act on them autom
 1. Back up the current file:
 
 ```bash
-cp .agents/roles/<ROLE_NAME>/memories.md \
-   .agents/roles/<ROLE_NAME>/memories.md.pre-dream-$(date +%Y%m%d)
+cp .agents/roles/<ROLE_NAME>/state/memories.md \
+   .agents/roles/<ROLE_NAME>/state/memories.md.pre-dream-$(date +%Y%m%d)
 ```
 
 2. Write the new content:
 
 ```bash
-cat > .agents/roles/<ROLE_NAME>/memories.md << 'DREAM_EOF'
+cat > .agents/roles/<ROLE_NAME>/state/memories.md << 'DREAM_EOF'
 <DREAM_OUTPUT>
 DREAM_EOF
 ```
@@ -269,13 +269,13 @@ DREAM_EOF
 3. Mark the dream in `sessions.md` by appending a marker row:
 
 ```bash
-echo "| $(date +%Y-%m-%d) | — | [dream completed] |" >> .agents/roles/<ROLE_NAME>/sessions.md
+echo "| $(date +%Y-%m-%d) | — | [dream completed] |" >> .agents/roles/<ROLE_NAME>/state/sessions.md
 ```
 
 4. Confirm:
 
 ```bash
-cat .agents/roles/<ROLE_NAME>/memories.md
+cat .agents/roles/<ROLE_NAME>/state/memories.md
 ```
 
 Show the user the final state and the backup file path.

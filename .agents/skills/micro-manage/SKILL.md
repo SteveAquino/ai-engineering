@@ -35,7 +35,7 @@ For each role in `ROLES`:
 
 ```bash
 ROLE="<role-name>"
-INBOX=~/work/personal/ai-engineering/agents/$ROLE/inbox
+INBOX=~/work/personal/ai-engineering/.agents/roles/$ROLE/state/inbox
 ls -t "$INBOX/"*.md 2>/dev/null || echo "(empty)"
 ```
 

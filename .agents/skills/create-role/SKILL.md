@@ -83,15 +83,17 @@ mkdir -p "$ROLE_DIR"
 Write `$ROLE_DIR/ROLE.md` with the confirmed content from Phase 2.
 
 ```bash
-# Initialize empty memories and sessions files
+# Initialize state/ subdirectory with empty memories and sessions files
 ROLE_NAME="<ROLE_NAME>"
-printf '## Recent\n\n' > ".agents/roles/$ROLE_NAME/memories.md"
-printf '# Sessions: %s\n\n| Date | Session ID | Label |\n|---|---|---|\n' "$ROLE_NAME" > ".agents/roles/$ROLE_NAME/sessions.md"
+mkdir -p ".agents/roles/$ROLE_NAME/state"
+printf '## Recent\n\n' > ".agents/roles/$ROLE_NAME/state/memories.md"
+printf '# Sessions: %s\n\n| Date | Session ID | Label |\n|---|---|---|\n' "$ROLE_NAME" > ".agents/roles/$ROLE_NAME/state/sessions.md"
 ```
 
 Confirm:
 ```bash
 ls -la .agents/roles/<ROLE_NAME>/
+ls -la .agents/roles/<ROLE_NAME>/state/
 ```
 
 ---

@@ -19,14 +19,15 @@ ai-engineering/
         references/       # git-ignored team/machine-specific overlays
     roles/
       <role-name>/
-        ROLE.md
-        memories.md
-        sessions.md
-        inbox/
-        logs/
-        skills/           # role-specific skills, auto-loaded by assume-role
+        ROLE.md           # committed persona definition — always at root
+        skills/           # committed role-specific skills, auto-loaded by assume-role
           <skill-name>/
             SKILL.md
+        state/            # git-ignored runtime state
+          memories.md
+          sessions.md
+          inbox/
+          logs/
 ```
 
 ### Skill directory layout
@@ -59,18 +60,22 @@ This keeps the semantics clear:
 
 ## Local Reference Strategy
 
-Committed skills and roles should stay portable. Machine-specific knowledge belongs in gitignored role state beside each role:
+Committed skills and roles should stay portable. Machine-specific knowledge belongs in the gitignored `state/` directory beside each role's `ROLE.md`:
 
 ```text
 .agents/roles/<role-name>/
-  ROLE.md        # committed persona
-  memories.md    # ignored local references and durable context
-  sessions.md    # ignored local session log
-  inbox/         # ignored local messages
-  logs/          # ignored local runtime logs
+  ROLE.md        # committed persona — always at root
+  skills/        # committed role-specific skills
+  state/         # git-ignored runtime state — never committed
+    memories.md      # durable context and local machine knowledge
+    sessions.md      # session log
+    inbox/           # pending messages
+    logs/            # runtime logs
 ```
 
-Use `memories.md` to adapt the same committed role and skills to a specific machine. Good local memories include:
+**Rule:** Never place runtime state files directly beside `ROLE.md`. Everything that isn't `ROLE.md` or `skills/` goes in `state/`. This keeps the role root clean and makes the committed/ignored boundary obvious at a glance.
+
+Use `state/memories.md` to adapt the same committed role and skills to a specific machine. Good local memories include:
 
 - local workspace roots and adjacent repo maps
 - project-specific skill paths that should be treated as references, not copied globally

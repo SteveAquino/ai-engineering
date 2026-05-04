@@ -50,20 +50,20 @@ ENTRY="### $DATE\n- <MEMORY_CONTENT>\n"
 
 # Append after the ## Recent header
 # If ## Recent doesn't exist, create it
-if grep -q "## Recent" "$ROLE_DIR/memories.md"; then
+if grep -q "## Recent" "$ROLE_DIR/state/memories.md"; then
   # Insert after the ## Recent line
   sed -i '' "/^## Recent/a\\
 \\
 $ENTRY
-" "$ROLE_DIR/memories.md"
+" "$ROLE_DIR/state/memories.md"
 else
-  echo -e "\n## Recent\n\n$ENTRY" >> "$ROLE_DIR/memories.md"
+  echo -e "\n## Recent\n\n$ENTRY" >> "$ROLE_DIR/state/memories.md"
 fi
 ```
 
 Confirm the write:
 ```bash
-tail -10 "$ROLE_DIR/memories.md"
+tail -10 "$ROLE_DIR/state/memories.md"
 ```
 
 Show the user what was written.
@@ -75,7 +75,7 @@ Show the user what was written.
 Count the number of entries under `## Recent`:
 
 ```bash
-grep -c "^### " "$ROLE_DIR/memories.md"
+grep -c "^### " "$ROLE_DIR/state/memories.md"
 ```
 
 If the count exceeds **20 entries**, offer consolidation:

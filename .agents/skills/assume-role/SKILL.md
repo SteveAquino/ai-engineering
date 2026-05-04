@@ -48,7 +48,7 @@ Check how many session entries exist for the chosen role:
 
 ```bash
 # Count data rows (exclude header lines starting with | Date or |---|)
-grep -c "^| 20" .agents/roles/<ROLE_NAME>/sessions.md 2>/dev/null || echo 0
+grep -c "^| 20" .agents/roles/<ROLE_NAME>/state/sessions.md 2>/dev/null || echo 0
 ```
 
 If **0 entries** — skip to Phase 2 (fresh session, no prior context to resume).
@@ -63,7 +63,7 @@ Choices: `["Resume previous session", "Start a fresh session"]`
 If **2+ entries** — show the full sessions table and let the user pick:
 
 ```bash
-cat .agents/roles/<ROLE_NAME>/sessions.md
+cat .agents/roles/<ROLE_NAME>/state/sessions.md
 ```
 
 **Use `ask_user`:**
@@ -91,7 +91,7 @@ fi
 
 cat "$ROLE_DIR/ROLE.md"
 echo "---MEMORIES---"
-cat "$ROLE_DIR/memories.md"
+cat "$ROLE_DIR/state/memories.md"
 echo "---SKILLS---"
 ls "$ROLE_DIR/skills/" 2>/dev/null | grep -v "^$" || echo "(none)"
 ```
@@ -111,12 +111,12 @@ Append a new entry to the role's `sessions.md`. Ask for an optional label first:
 
 Allow freeform. If the user skips or provides nothing, use `(no label)`.
 
-Append a new row to `.agents/roles/<ROLE_NAME>/sessions.md`:
+Append a new row to `.agents/roles/<ROLE_NAME>/state/sessions.md`:
 
 ```bash
 DATE=$(date +%Y-%m-%d)
 # Append row: | date | session-id | label |
-echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> .agents/roles/<ROLE_NAME>/sessions.md
+echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> .agents/roles/<ROLE_NAME>/state/sessions.md
 ```
 
 The session ID is available from the current session context.
@@ -130,7 +130,7 @@ Before delivering the briefing, check for pending inbox messages:
 ```python
 import os, glob
 ROLE_NAME = "<ROLE_NAME>"
-inbox = os.path.expanduser(f".agents/roles/{ROLE_NAME}/inbox")
+inbox = os.path.expanduser(f".agents/roles/{ROLE_NAME}/state/inbox")
 files = sorted(glob.glob(os.path.join(inbox, "*.md"))) if os.path.exists(inbox) else []
 print(f"Pending inbox messages: {len(files)}")
 for f in files:

@@ -36,13 +36,13 @@ ROLE_DIR="$HOME/.agents/roles/<ROLE_NAME>"
 PURPOSE=$(awk '/^## Purpose/{found=1; next} found && NF{print; exit}' "$ROLE_DIR/ROLE.md" 2>/dev/null || echo "(no instructions)")
 
 # Most recent session: last data row in sessions.md
-LAST_SESSION=$(grep "^| 20" "$ROLE_DIR/sessions.md" 2>/dev/null | tail -1)
+LAST_SESSION=$(grep "^| 20" "$ROLE_DIR/state/sessions.md" 2>/dev/null | tail -1)
 SESSION_ID=$(echo "$LAST_SESSION" | awk -F'|' '{print $3}' | tr -d ' ')
 SESSION_LABEL=$(echo "$LAST_SESSION" | awk -F'|' '{print $4}' | sed 's/^ *//;s/ *$//')
-SESSION_COUNT=$(grep -c "^| 20" "$ROLE_DIR/sessions.md" 2>/dev/null || echo 0)
+SESSION_COUNT=$(grep -c "^| 20" "$ROLE_DIR/state/sessions.md" 2>/dev/null || echo 0)
 
 # Memory entry count
-MEMORY_COUNT=$(grep -c "^### " "$ROLE_DIR/memories.md" 2>/dev/null || echo 0)
+MEMORY_COUNT=$(grep -c "^### " "$ROLE_DIR/state/memories.md" 2>/dev/null || echo 0)
 ```
 
 ---

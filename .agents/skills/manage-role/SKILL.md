@@ -77,7 +77,7 @@ After all sections, write the updated file and display the result.
 ## Action: View Memories
 
 ```bash
-cat .agents/roles/<ROLE_NAME>/memories.md
+cat .agents/roles/<ROLE_NAME>/state/memories.md
 ```
 
 Display the full contents. Then ask:
@@ -91,7 +91,7 @@ Choices: `["Consolidate memories", "Done"]`
 
 Count entries:
 ```bash
-grep -c "^### " .agents/roles/<ROLE_NAME>/memories.md
+grep -c "^### " .agents/roles/<ROLE_NAME>/state/memories.md
 ```
 
 Display the count. Then:
