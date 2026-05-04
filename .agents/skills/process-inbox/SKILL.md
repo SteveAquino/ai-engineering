@@ -20,7 +20,7 @@ The current role is known from the active `assume-role` briefing in this session
 ```python
 import os, glob
 CURRENT_ROLE = "<CURRENT_ROLE>"
-inbox = os.path.expanduser(f"~/work/personal/ai-engineering/agents/{CURRENT_ROLE}/inbox")
+inbox = os.path.expanduser(f"~/work/personal/ai-engineering/.agents/roles/{CURRENT_ROLE}/inbox")
 files = sorted(glob.glob(os.path.join(inbox, "*.md"))) if os.path.exists(inbox) else []
 print(f"Found {len(files)} pending message(s) in {CURRENT_ROLE} inbox:")
 for f in files:
@@ -36,7 +36,7 @@ Stop here.
 ## Phase 2 — Load Role Instructions
 
 ```bash
-cat ~/work/personal/ai-engineering/agents/<CURRENT_ROLE>/AGENTS.md
+cat ~/work/personal/ai-engineering/.agents/roles/<CURRENT_ROLE>/ROLE.md
 ```
 
 Read the full instructions, paying close attention to the **Inbox Handling** section — it defines how to interpret and act on messages for this role.
@@ -106,7 +106,7 @@ Report:
 
 ## Notes
 
-- The inbox lives at `~/work/personal/ai-engineering/agents/<ROLE>/inbox/`
+- The inbox lives at `~/work/personal/ai-engineering/.agents/roles/<ROLE>/inbox/`
 - Messages are written by the `send-message` skill or any agent that drops `.md` files there
 - Processed files are deleted only after user confirmation (or automatically in cron/autonomous mode)
 - Kept files remain in the inbox and are noted in the summary as "processed but retained"
