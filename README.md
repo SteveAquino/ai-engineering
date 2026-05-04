@@ -42,6 +42,18 @@ Every skill directory has exactly one `SKILL.md` at its root. Supporting artifac
 
 **Rule:** Never place additional `.md` files directly beside `SKILL.md`. If a skill needs a supporting document, it goes in `docs/`. If it needs team context, it goes in `references/`.
 
+### Role directory layout
+
+Every role directory has exactly one `ROLE.md` at its root. Committed role-specific skills live in `skills/`. All runtime state lives in `state/`:
+
+| Path | Purpose | Committed? |
+|------|---------|------------|
+| `ROLE.md` | Persona definition (purpose, goals, communication style) | ✅ Yes |
+| `skills/` | Role-specific skills, auto-surfaced in briefing by `assume-role` | ✅ Yes |
+| `state/` | All runtime state — memories, sessions, inbox, logs, backups | ❌ No (git-ignored) |
+
+**Rule:** Never place runtime state files directly beside `ROLE.md`. Everything that isn't `ROLE.md` or `skills/` goes in `state/`. This keeps the committed/ignored boundary obvious at a glance.
+
 ## Why This Shape
 
 Codex and the broader agent-skills ecosystem are converging on `.agents/skills/<skill>/SKILL.md` as the low-config, repo-local discovery path for reusable skills. Keeping skills there means Codex can discover repo skills without per-repo configuration, and user-global discovery can be handled with one junction or symlink.
@@ -58,22 +70,22 @@ This keeps the semantics clear:
 - `.agents/roles` is this repo's portable persona registry.
 - ignored role state remains local to each machine.
 
-## Local Reference Strategy
+## Local State Strategy
 
-Committed skills and roles should stay portable. Machine-specific knowledge belongs in the gitignored `state/` directory beside each role's `ROLE.md`:
+Committed skills and roles must stay portable — they should work on any machine. Machine-specific knowledge and runtime state belong in the gitignored `state/` directory inside each role:
 
 ```text
 .agents/roles/<role-name>/
   ROLE.md        # committed persona — always at root
   skills/        # committed role-specific skills
-  state/         # git-ignored runtime state — never committed
+  state/         # git-ignored runtime state — NEVER committed
     memories.md      # durable context and local machine knowledge
     sessions.md      # session log
     inbox/           # pending messages
     logs/            # runtime logs
 ```
 
-**Rule:** Never place runtime state files directly beside `ROLE.md`. Everything that isn't `ROLE.md` or `skills/` goes in `state/`. This keeps the role root clean and makes the committed/ignored boundary obvious at a glance.
+**Rule:** `state/` is the only place runtime files live. Never drop `memories.md`, `sessions.md`, or any inbox/log directly beside `ROLE.md`. The role root should contain only `ROLE.md` and `skills/` — anything else indicates a misplaced file.
 
 Use `state/memories.md` to adapt the same committed role and skills to a specific machine. Good local memories include:
 
@@ -109,7 +121,7 @@ Skills such as `assume-role`, `create-role`, `list-roles`, `manage-role`, `remem
 
 ---
 
-
+## Tool Setup
 
 ### Codex
 
@@ -216,12 +228,18 @@ Examples:
 .agents/roles/
   skill-builder/
     ROLE.md
-    memories.md
-    sessions.md
+    skills/
+    state/
+      memories.md
+      sessions.md
+      inbox/
   software-engineering-assistant/
     ROLE.md
-    memories.md
-    sessions.md
+    skills/
+    state/
+      memories.md
+      sessions.md
+      inbox/
 ```
 
 To use a role, invoke `assume-role`.
