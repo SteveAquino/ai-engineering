@@ -1,6 +1,7 @@
 # Role runtime state - never commit (memories, sessions, inbox, logs, backups)
 # All state lives in state/ subdirectory next to ROLE.md
 .agents/roles/*/state/
+.agents/roles/*/skills/*/references/
 
 # Team-specific skill overlays - never commit
 .agents/skills/*/references/
