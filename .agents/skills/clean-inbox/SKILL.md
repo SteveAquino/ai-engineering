@@ -90,6 +90,9 @@ no-reply@updates.braze.com
 info@peeklogic.com
 webinars@e.lucid.co
 no_reply@email.apple.com          # App Store Connect notifications
+testflight_no_reply@email.apple.com  # TestFlight build notifications
+secure-support@expo.dev           # Expo build/submission notifications — see "Deployment Activity" below
+firebase-noreply@google.com       # Firebase notifications
 hello@carrumhealth.com            # patient-facing notifications
 support@omadahealth.com
 no-reply@dtdg.co                  # Datadog alerts and digests
@@ -111,7 +114,38 @@ noreply@sentry.io
 "Update to our privacy policy"
 "Kaitlin Pham is ready to work"     # Notion onboarding noise
 "New in April:"                     # Braze/vendor newsletters
+"build succeeded"                   # Expo build noise
+"submission succeeded"              # Expo submission noise
+"is now available to test"          # TestFlight noise
+"has completed processing"          # App Store Connect processing noise
 ```
+
+### Deployment activity — archive but summarize
+
+Expo, TestFlight, and App Store Connect emails are noise individually, but the **collective activity is worth surfacing** in the archive log as a one-line deployment summary. Before archiving, note:
+- Platform (iOS / Android)
+- Stage reached (build → submission → review → ready for distribution)
+- Any failures (if a build or submission *failed*, that is actionable — do NOT archive, keep it)
+
+Include a `## 🚀 Deployment Activity` section in the archive log (see Phase 4 template). Example:
+```
+iOS 1.5.7: build → submitted → In Review → Ready for Distribution ✅
+Android 1.5.7: build → submitted ✅
+```
+
+### To/CC context awareness
+
+Before keeping a message as actionable, check whether you are the **primary recipient (To:)** or only **CC'd**. These have different weights:
+
+| Your position | Default treatment |
+|---|---|
+| **To:** (primary) | Treat as directed at you — apply full prioritization |
+| **CC:** only | Lower priority — treat as FYI unless the thread explicitly asks for your input |
+| **BCC / list** | Background awareness — archive unless clearly actionable |
+
+**Example:** An email from a Carrum engineer addressed **To: Anthem contacts**, with Steve CC'd, is an external communication you're copied on for awareness — not a personal action item. Archive it or downgrade to 📋 Other Items rather than flagging as 🔴 High Priority.
+
+When in doubt, read the first line of the body to check if it addresses "Steve" or "Hi team" vs. "Dear [external party]".
 
 ### Deduplication rules
 
@@ -246,6 +280,13 @@ Create `Inbox Summaries/Archive Logs/YYYY-MM-DD Mail Archive Log.md` in the Obsi
 **Total archived:** N messages
 
 ---
+
+## 🚀 Deployment Activity
+| Platform | Version | Pipeline | Status |
+|---|---|---|---|
+| iOS | 1.x.x | build → submitted → In Review → Ready | ✅ |
+| Android | 1.x.x | build → submitted | ✅ |
+*(Omit if no build/submission emails were present. Any failures should NOT be archived — surface them as actionable.)*
 
 ## 🗓️ Gemini Meeting Notes (N emails)
 [List meeting titles, link to Gemini Index]
