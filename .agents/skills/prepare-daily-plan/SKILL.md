@@ -53,77 +53,98 @@ Use the role's purpose and goals to guide what "important" means when prioritizi
 
 ---
 
-## Phase 1 — Gather Context
+## Phase 1 — Gather Context via Inbox Sub-Skills
 
-This phase is read-only. Use every available tool or CLI to collect signals. Do not edit, close, merge, or modify anything.
-
-### 1a. Pull Requests Needing Attention
-
-Use `gh` to find open PRs that need review or are stalled:
+This phase is **read-only and DRY** — it delegates to specialized inbox skills that each own their data source. Each sub-skill writes a dated summary file to Obsidian; this skill reads those files to synthesize the plan. Never re-fetch data that a sub-skill already collected today.
 
 ```bash
-# PRs awaiting review (assigned to you or your team)
-gh pr list --state open --json number,title,author,reviewDecision,createdAt,url \
-  | python3 -c "import json,sys; prs=json.load(sys.stdin); [print(f'#{p[\"number\"]} {p[\"title\"]} — by {p[\"author\"][\"login\"]} ({p[\"reviewDecision\"] or \"awaiting review\"}) {p[\"url\"]}') for p in prs]"
+TODAY=$(date +%Y-%m-%d)
+VAULT_PATH="/Users/stevenaquino/Documents/Obsidian Vault: Work"
 ```
 
-Look for:
-- PRs with no reviews yet (oldest first = most stalled)
-- PRs with change requests that haven't been updated
-- PRs close to merging (approved, waiting for CI or final push)
+### 1a. Jira Inbox
 
-If `gh` is not available (`which gh` fails), note it as unavailable and skip.
-
-### 1b. Issues / Action Items
-
-Use `gh` to find open issues:
+Check if today's Jira summary already exists:
 
 ```bash
-gh issue list --state open --assignee @me --json number,title,labels,createdAt,url \
-  | python3 -c "import json,sys; issues=json.load(sys.stdin); [print(f'#{i[\"number\"]} {i[\"title\"]} {i[\"url\"]}') for i in issues]"
+JIRA_SUMMARY="$VAULT_PATH/Inbox Summaries/Jira/$TODAY Jira Summary.md"
+if [ -f "$JIRA_SUMMARY" ]; then
+    echo "✅ Jira summary found — reading existing file"
+    cat "$JIRA_SUMMARY"
+else
+    echo "⬇️  Jira summary not found — invoking read-jira-inbox skill"
+    # Invoke the read-jira-inbox skill (it will write the file)
+fi
 ```
 
-### 1c. Ticket Queue
+If the file doesn't exist, invoke the `read-jira-inbox` skill as a sub-step. After it completes, read `$JIRA_SUMMARY`.
 
-Check for available skills that can read tickets. Scan the loaded skill directories for anything relevant:
+Extract action signals:
+- 🔴 Blocked tickets → **Do Today**
+- 🟡 In Progress → **Do Today** or **Schedule**
+- PRs awaiting review from Jira context → **Do Today**
+
+### 1b. GitHub Inbox
+
+Check if today's GitHub summary already exists:
 
 ```bash
-ls ~/.agents/skills/
-# Also check any employer skill directories registered in ~/.copilot/settings.json
+GITHUB_SUMMARY="$VAULT_PATH/Inbox Summaries/GitHub/$TODAY GitHub Summary.md"
+if [ -f "$GITHUB_SUMMARY" ]; then
+    echo "✅ GitHub summary found — reading existing file"
+    cat "$GITHUB_SUMMARY"
+else
+    echo "⬇️  GitHub summary not found — invoking read-github-inbox skill"
+    # Invoke the read-github-inbox skill (it will write the file)
+fi
 ```
 
-Look for skills with names like `read-jira-ticket`, `atlassian-acli`, `list-tickets`, or similar. If found, invoke them to retrieve in-progress and queued tickets for the current user. Use the skill's own instructions to determine the right query — typically: tickets assigned to you, in an active sprint, with status In Progress / To Do / Blocked.
+If the file doesn't exist, invoke the `read-github-inbox` skill as a sub-step.
 
-Look for:
-- Blocked tickets (what's the blocker? can you unblock today?)
-- In-progress tickets (any that are stalled or need a nudge?)
-- High-priority To Do items that haven't been started
+Extract action signals:
+- 🔴 Review requested on me → **Do Today**
+- 🔴 CI failing on my PRs → **Do Today**
+- 🟡 My stalled PRs (no review > 2 days) → **Delegate** or nudge
+- 🟢 Assigned issues → **Schedule** unless time-sensitive
 
-If no ticket-reading skill is available, note it and skip.
+### 1c. Email Inbox
 
-### 1e. Email Digest (optional signal)
-
-If the `read-apple-mail` skill is available, invoke it for an unread mail summary:
+Check if today's email summary already exists:
 
 ```bash
-ls .agents/skills/read-apple-mail/SKILL.md 2>/dev/null && echo "available" || echo "unavailable"
+EMAIL_SUMMARY="$VAULT_PATH/Inbox Summaries/Email/$TODAY Email Summary.md"
+if [ -f "$EMAIL_SUMMARY" ]; then
+    echo "✅ Email summary found — reading existing file"
+    cat "$EMAIL_SUMMARY"
+else
+    echo "⬇️  Email summary not found — invoking clean-inbox skill"
+    # Invoke the clean-inbox skill (it will write the file)
+    # Note: clean-inbox is interactive — if running headlessly, skip and note the gap
+fi
 ```
 
-If available, invoke it as a sub-skill. Its output is an email digest (subject lines, senders, suggested todos) — incorporate flagged action items into the plan's **Top Priority** or **Needs Review** sections.
+Extract action signals:
+- 🔴 Compliance deadlines, approval requests, sensitive items → **Do Today**
+- 🟡 Security/certificate threads, RSVP deadlines → **Do Today** or **Schedule**
+- 🟢 FYI calendar items → **Context & Notes**
 
-If `read-apple-mail` returns `skipped-no-consent` or `skipped-sensitive`, include a note in the plan:
-> "Email digest skipped (consent or sensitivity check). Review Apple Mail directly."
+### 1d. Slack Digest (optional)
 
-If unavailable or if the skill returns `error-*`, skip silently.
-
----
-
-### 1d. Recent Activity (optional signal)
-
-Scan for anything that happened since yesterday that may need follow-up:
+Check if today's Slack summary exists:
 
 ```bash
-# PRs merged in the last 24h
+SLACK_SUMMARY="$VAULT_PATH/Inbox Summaries/Slack/$TODAY Slack Summary.md"
+[ -f "$SLACK_SUMMARY" ] && cat "$SLACK_SUMMARY" || echo "No Slack summary for today — was it archived separately?"
+```
+
+If a Slack summary exists, read it for additional context. Do not invoke any tool to create it — Slack digests are manually shared or created via `clean-inbox`-style processing.
+
+### 1e. Recent Merged PRs (optional enrichment)
+
+Pull lightweight recent activity that doesn't require a sub-skill:
+
+```bash
+# PRs merged in the last 24h — useful for Context & Notes section
 gh pr list --state merged --json number,title,mergedAt,url \
   --search "merged:>$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d 'yesterday' +%Y-%m-%d)" \
   | python3 -c "import json,sys; [print(f'#{p[\"number\"]} {p[\"title\"]} (merged) {p[\"url\"]}') for p in json.load(sys.stdin)]" 2>/dev/null || true
@@ -154,6 +175,8 @@ Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets 
 
 ```markdown
 # Daily Plan — <Day, Month Date Year>
+
+> Sources: [[Inbox Summaries/Jira/YYYY-MM-DD Jira Summary|Jira]] · [[Inbox Summaries/GitHub/YYYY-MM-DD GitHub Summary|GitHub]] · [[Inbox Summaries/Email/YYYY-MM-DD Email Summary|Email]] · [[Inbox Summaries/Slack/YYYY-MM-DD Slack Summary|Slack]]
 
 ## 🔴 Do Today
 > These require your direct attention today.
@@ -217,61 +240,93 @@ print(f"✅ Daily plan written to inbox: {filename}")
 
 If a daily plan file for today already exists, overwrite it — this skill may run multiple times in a day.
 
-### Phase 3b — Obsidian Sync (optional)
+### Phase 3b — Obsidian Sync
 
-If the `obsidian-vault` skill is available and `DAILY_PLAN_NOTE_PATH` is configured in that skill's `references/local.md`, invoke `obsidian-vault` to write the plan there too:
-
-- **operation:** `write-note`
-- **path:** `DAILY_PLAN_NOTE_PATH` (e.g. `Daily Notes/<YYYY>-<MM>-<DD>.md`)
-- **content:** the plan markdown from Phase 2
-
-This makes the Obsidian vault the durable source of truth while the inbox copy drives `process-inbox` actions. If the vault skill is unavailable or not configured, skip silently.
-
-### Phase 3c — Update Welcome.md Workload Meter (optional)
-
-If `VAULT_PATH` is available (from `references/local.md` or the `obsidian-vault` skill), update the Workload Meter section in `Welcome.md`.
-
-Read the open action items (lines starting with `- [ ]`) from `Welcome.md`, count by priority prefix (`🔴` / `🟡` / `🟢`), then rewrite the Workload section:
+Write the daily plan to Obsidian:
 
 ```python
-import re
+import os, datetime
 
-VAULT_PATH = "<from references/local.md>"
+VAULT_PATH = "/Users/stevenaquino/Documents/Obsidian Vault: Work"
+TODAY = datetime.date.today()
+date_label = TODAY.strftime("%Y-%m-%d")
+
+plan_path = f"{VAULT_PATH}/Inbox Summaries/Daily Plans/{date_label} Daily Plan.md"
+os.makedirs(os.path.dirname(plan_path), exist_ok=True)
+with open(plan_path, "w") as f:
+    f.write(PLAN_CONTENT)
+print(f"✅ Daily plan written to Obsidian: {plan_path}")
+```
+
+### Phase 3c — Update Welcome.md
+
+Update **two sections** of `Welcome.md`:
+
+#### 1. Start of Day table
+
+Replace the Start of Day table to point to today's dated summaries:
+
+```python
+import re, os, datetime
+
+VAULT_PATH = "/Users/stevenaquino/Documents/Obsidian Vault: Work"
+TODAY = datetime.date.today().strftime("%Y-%m-%d")
 welcome_path = f"{VAULT_PATH}/Welcome.md"
 
 content = open(welcome_path).read()
-tasks = re.findall(r"- \[ \] (.+)", content)
-high   = sum(1 for t in tasks if t.startswith("🔴"))
-medium = sum(1 for t in tasks if t.startswith("🟡"))
-low    = sum(1 for t in tasks if t.startswith("🟢"))
+
+new_start_of_day = f"""## 🌅 Start of Day
+
+| | |
+|---|---|
+| 📅 [[Inbox Summaries/Daily Plans/{TODAY} Daily Plan\\|Today's Plan]] | 📬 [[Inbox Summaries/Email/{TODAY} Email Summary\\|Email Summary]] |
+| 💬 [[Inbox Summaries/Slack/{TODAY} Slack Summary\\|Slack Summary]] | 📋 [[Inbox Summaries/Jira/{TODAY} Jira Summary\\|Jira Summary]] |
+| 🐙 [[Inbox Summaries/GitHub/{TODAY} GitHub Summary\\|GitHub Summary]] | 🌙 [[Inbox Summaries/Daily Plans/{TODAY} End of Day\\|End of Day Notes]] |"""
+
+updated = re.sub(
+    r"## 🌅 Start of Day.*?(?=\n---|\n## )",
+    new_start_of_day + "\n\n",
+    content,
+    flags=re.DOTALL
+)
+```
+
+#### 2. Workload Meter
+
+Count open action items from today's plan and update the meter:
+
+```python
+tasks = re.findall(r"- \[ \] (.+)", PLAN_CONTENT)
+high   = sum(1 for t in tasks if "🔴" in t)
+medium = sum(1 for t in tasks if "🟡" in t)
+low    = sum(1 for t in tasks if "🟢" in t)
 total  = len(tasks)
 
-# Build bar (scale: 15 max = full bar of 15 █)
 filled = min(round(total / 15 * 15), 15)
 bar = "█" * filled + "░" * (15 - filled)
 
-if total <= 3:   label = "Light"
-elif total <= 7: label = "Moderate"
+if total <= 3:    label = "Light"
+elif total <= 7:  label = "Moderate"
 elif total <= 11: label = "Heavy"
-else:            label = "Critical"
+else:             label = "Critical"
 
 new_workload = f"""## 🌡️ Workload
 
 | 🔴 **{high}** | 🟡 **{medium}** | 🟢 **{low}** | **{total} open** — `{bar}` {label} |
 |---|---|---|---|"""
 
-# Replace between ## 🌡️ Workload and the next ## heading
 updated = re.sub(
-    r"## 🌡️ Workload.*?(?=\n## |\Z)",
+    r"## 🌡️ Workload.*?(?=\n---|\n## )",
     new_workload + "\n\n",
-    content,
+    updated,
     flags=re.DOTALL
 )
+
 open(welcome_path, "w").write(updated)
-print(f"✅ Workload meter updated: {total} open ({high}🔴 {medium}🟡 {low}🟢) — {label}")
+print(f"✅ Welcome.md updated — Start of Day links + Workload: {total} open ({high}🔴 {medium}🟡 {low}🟢) — {label}")
 ```
 
-If `Welcome.md` doesn't exist or the Workload section is missing, skip silently.
+If `Welcome.md` doesn't exist or either section is missing, skip that section silently and log a warning.
 
 ---
 
