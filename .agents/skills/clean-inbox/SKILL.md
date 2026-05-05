@@ -12,10 +12,9 @@ Use this skill to triage the Apple Mail inbox. It archives noise, updates persis
 ## ⛔ Hard Rules
 
 - Never archive messages that require a decision or response without explicit confirmation
-- Never delete — only archive (move to Gmail `All Mail` via the correct AppleScript pattern)
+- Never delete — only archive (use `mailbox "Archive"` with global `inbox` as source — see Phase 2)
 - Always write the archive log before ending — the log is the audit trail
 - Never merge, push, or take irreversible action on flagged sensitive emails (e.g. credential emails) — surface them to the user instead
-- **Never use `mailbox "Archive"`** — this creates a local non-synced mailbox for Gmail accounts; messages silently come back on next sync
 
 ---
 
@@ -126,67 +125,41 @@ When multiple copies of the same notification type exist, keep the **most recent
 
 ## Phase 2 — Archive Noise
 
-> **🚨 CRITICAL — Gmail + Apple Mail archiving works differently from other IMAP accounts.**
+> **🔑 KEY INSIGHT — Gmail IMAP + Apple Mail archiving:**
 >
-> Gmail has **no "Archive" mailbox**. Moving to `mailbox "Archive"` silently creates a **local, non-synced** mailbox — messages appear to disappear but Gmail re-syncs them on the next poll (usually within minutes), and they all come back.
+> Gmail stores **all messages in `[Gmail]/All Mail`**. INBOX is just a label — not a storage folder. Moving a message to `All Mail` is a no-op because it's already there.
 >
-> **The correct pattern:**
-> 1. Get the Gmail INBOX and All Mail mailboxes by **iterating** — do NOT use `mailbox "All Mail" of account` by name, it throws an error
-> 2. Filter messages from the **Gmail INBOX mailbox** (not the global `inbox` object)
-> 3. Move messages **one-at-a-time** in a `repeat` loop — bulk list moves fail with a type error when Gmail is the source
-> 4. Moving a message from Gmail INBOX → All Mail removes the `\Inbox` label in Gmail, permanently archiving it
+> To "archive" (remove the Inbox label), you must operate from the **global `inbox` object** (Apple Mail's virtual combined inbox) and move to `mailbox "Archive"`. Despite `mailbox "Archive"` sounding local, operating from `inbox` causes Mail to issue the correct IMAP EXPUNGE from the Gmail INBOX context, which removes the Inbox label server-side. Verified to persist through multiple Gmail sync cycles.
+>
+> **Things that do NOT work (all researched and confirmed broken):**
+> - Moving from iterated `gmailInbox` mailbox object → messages are already in All Mail; no-op
+> - `move ... to mailbox "[Gmail]/All Mail" of acct` — technically succeeds but no IMAP label removal; messages come back
+> - `move listOfMessages to archiveBox` — bulk list moves throw `-1700` type error; use one-at-a-time
 
 **The correct archiving template:**
 
 ```applescript
 osascript << 'EOF'
 tell application "Mail"
-    -- Step 1: Find Gmail INBOX and All Mail by iterating (required — name lookup fails)
-    set acct to first account whose name is "Google"
-    set gmailInbox to missing value
-    set allMailBox to missing value
-    repeat with mb in (every mailbox of acct)
-        if name of mb is "INBOX" then set gmailInbox to mb
-        if name of mb is "All Mail" then set allMailBox to mb
-    end repeat
-    if gmailInbox is missing value or allMailBox is missing value then
-        return "ERROR: Could not find Gmail INBOX or All Mail"
-    end if
+    -- Archive by sender — uses global inbox (critical!) and mailbox "Archive" (correct for Gmail)
+    move (messages of inbox whose sender contains "gemini-notes@google.com") to mailbox "Archive"
+    move (messages of inbox whose sender contains "no-reply@dtdg.co") to mailbox "Archive"
     
-    -- Step 2: Archive by sender (one-at-a-time in a repeat loop)
-    set toMove to (messages of gmailInbox whose sender contains "gemini-notes@google.com")
+    -- Archive by subject fragment
+    move (messages of inbox whose subject contains "Your Weekly Digest from Datadog") to mailbox "Archive"
+    
+    -- For large batches or when whose-syntax fails, use one-at-a-time:
+    set toMove to (messages of inbox whose sender contains "automation@carrumhealth.atlassian.net")
     repeat with msg in toMove
-        move msg to allMailBox
+        move msg to mailbox "Archive"
     end repeat
     
-    -- Step 3: Archive by subject fragment
-    set toMove to (messages of gmailInbox whose subject contains "Your Weekly Digest from Datadog")
-    repeat with msg in toMove
-        move msg to allMailBox
-    end repeat
-    
-    -- add more sender/subject blocks here
-    
-    return "Done. Inbox: " & (count of messages of gmailInbox)
+    return "Done. Inbox now: " & (count of messages of inbox)
 end tell
 EOF
 ```
 
-**Things that DO NOT work for Gmail:**
-- `move ... to mailbox "Archive"` — creates a local non-synced mailbox; messages come back
-- `move ... to mailbox "All Mail" of account "Google"` — throws `-1728` error; must use iteration
-- `move listOfMessages to allMailBox` — bulk list move throws `-1700` type error; use one-at-a-time loop
-- Using the global `inbox` object for filtering — returns cross-account messages stored in `[Gmail]/All Mail`, causing move failures
-
-**Things that DO work:**
-- Iterate `every mailbox of acct` to find INBOX and All Mail by name
-- Filter with `whose` on the `gmailInbox` mailbox object
-- Move messages individually with `repeat with msg in toMove ... move msg to allMailBox ... end repeat`
-
-Run as many sender/subject blocks as needed. Verify the count after each batch:
-```applescript
-count of messages of gmailInbox
-```
+Run as many blocks as needed. Verify the count drops after each batch. Gmail sync delay is ~30–60 seconds; wait a few minutes then check the count hasn't rebounded before declaring success.
 
 ---
 
@@ -374,8 +347,5 @@ Summarize:
 - **Obsidian vault:** set in `references/local.md` as `VAULT_PATH` (see `docs/local.example.md`)
 - **Archive log location:** `$VAULT_PATH/$ARCHIVE_LOG_PATH` (default: `Inbox Summaries/Archive Logs/YYYY-MM-DD Mail Archive Log.md`)
 - **Email summary location:** `$VAULT_PATH/$EMAIL_SUMMARY_PATH` (default: `Inbox Summaries/Email/YYYY-MM-DD Email Summary.md`)
-- **Gmail archiving:** `move msg to allMailBox` where `allMailBox` is found by iterating `every mailbox of acct` — NOT `mailbox "Archive"` (local only, messages come back) and NOT `mailbox "All Mail" of account` (throws `-1728`). Move one message at a time in a `repeat` loop — bulk list moves throw `-1700`.
-- **Gemini index:** `$VAULT_PATH/$GEMINI_INDEX_PATH` (default: `Meeting Notes/Gemini Index.md`)
-- **Apple Mail emlx path:** `~/Library/Mail/V10/{ACCOUNT_UUID}/[Gmail].mbox/All Mail.mbox/{MBOX_UUID}/Data/{digits}/Messages/{ROWID}.emlx`
-- **emlx format:** First line is a byte count integer — strip it before parsing as RFC 2822: `lines = raw.split(b'\n', 1); msg = email.message_from_bytes(lines[1])`
-- **Gmail IMAP behavior:** All messages stored once in `[Gmail]/All Mail`. INBOX is a label, not a folder. Archiving = removing that label, which `mailbox "Archive"` correctly triggers via IMAP.
+- **Gmail archiving (the working pattern):** `move (messages of inbox whose ...) to mailbox "Archive"` — using global `inbox` (not an iterated mailbox) as the source causes Mail to issue IMAP EXPUNGE from the INBOX context, which removes Gmail's Inbox label server-side. Verified to persist through multiple sync cycles. All other patterns (moving from iterated gmailInbox, moving to `[Gmail]/All Mail` directly, etc.) do not remove the server-side label and messages come back.
+- **Gmail IMAP behavior:** All messages stored once in `[Gmail]/All Mail`. INBOX is a label, not a storage folder. The only way to archive via AppleScript is to use `messages of inbox` + `mailbox "Archive"` — this combination correctly removes the Gmail Inbox label.
