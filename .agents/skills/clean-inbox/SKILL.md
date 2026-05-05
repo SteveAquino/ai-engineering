@@ -33,6 +33,7 @@ Required keys:
 
 Optional keys (fall back to defaults if absent):
 - `ARCHIVE_LOG_PATH` — path template for archive log, relative to `VAULT_PATH` (tokens: `<YYYY>`, `<MM>`, `<DD>`)
+- `EMAIL_SUMMARY_PATH` — path template for email summary, relative to `VAULT_PATH` (default: `Inbox Summaries/Email/YYYY-MM-DD Email Summary.md`)
 - `GEMINI_INDEX_PATH` — path to Gemini meeting notes index, relative to `VAULT_PATH`
 
 If `VAULT_PATH` is missing, ask the user and offer to write `references/local.md`. See `docs/local.example.md` for the full format.
@@ -252,6 +253,54 @@ Create `Inbox Summaries/Archive Logs/YYYY-MM-DD Mail Archive Log.md` in the Obsi
 
 ---
 
+## Phase 4b — Write Email Summary to Obsidian
+
+After writing the archive log, write a **human-readable email summary** to the vault. This is the daily at-a-glance reference for what's in the inbox — separate from the archive log (which is the audit trail).
+
+**Location:** `Inbox Summaries/Email/YYYY-MM-DD Email Summary.md`
+
+**Template:**
+
+```markdown
+# Email Summary — YYYY-MM-DD
+
+**Inbox before:** N messages
+**Inbox after:** N messages
+**Archived:** N messages
+**Archive log:** [[Inbox Summaries/Archive Logs/YYYY-MM-DD Mail Archive Log]]
+
+---
+
+## 🔴 High Priority — Action Required
+
+- ⚠️ [Sender] — "[Subject]" (what action is needed)
+- ...
+
+---
+
+## 🟡 Medium Priority — Needs Input Soon
+
+- [Sender] — [Description] (context)
+- ...
+
+---
+
+## 🟢 FYI / Upcoming Calendar
+
+| Date | Event |
+|---|---|
+| **Day Month Time** | Description |
+
+---
+
+## 📋 Other Items
+- [Anything else worth noting]
+```
+
+Write this file **before** presenting the summary to the user — it ensures the summary is persisted in Obsidian even if the session ends.
+
+---
+
 ## Phase 5 — Summarize Actionable Items
 
 Present the remaining inbox as a prioritized list grouped by urgency:
@@ -284,6 +333,7 @@ osascript -e 'tell application "Mail" to count messages of inbox'
 Summarize:
 - Messages archived (total and by category)
 - Archive log location in Obsidian
+- Email summary location in Obsidian
 - Gemini index updated (Y/N, how many new entries)
 - Top 3 actions remaining
 
@@ -293,6 +343,7 @@ Summarize:
 
 - **Obsidian vault:** set in `references/local.md` as `VAULT_PATH` (see `docs/local.example.md`)
 - **Archive log location:** `$VAULT_PATH/$ARCHIVE_LOG_PATH` (default: `Inbox Summaries/Archive Logs/YYYY-MM-DD Mail Archive Log.md`)
+- **Email summary location:** `$VAULT_PATH/$EMAIL_SUMMARY_PATH` (default: `Inbox Summaries/Email/YYYY-MM-DD Email Summary.md`)
 - **Gemini index:** `$VAULT_PATH/$GEMINI_INDEX_PATH` (default: `Meeting Notes/Gemini Index.md`)
 - **Apple Mail emlx path:** `~/Library/Mail/V10/{ACCOUNT_UUID}/[Gmail].mbox/All Mail.mbox/{MBOX_UUID}/Data/{digits}/Messages/{ROWID}.emlx`
 - **emlx format:** First line is a byte count integer — strip it before parsing as RFC 2822: `lines = raw.split(b'\n', 1); msg = email.message_from_bytes(lines[1])`
