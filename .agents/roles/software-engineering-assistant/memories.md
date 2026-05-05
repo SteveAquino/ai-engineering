@@ -14,3 +14,17 @@
 [skill-candidate] `parallel-pr-fix` (placement: employer:carrum): Takes a PR review summary, locates worktrees for each branch, launches one general-purpose background fix agent per PR with full diff + findings + worktree context, waits for all, then verifies CI and reports results. First seen: 2026-05-04, session a05d9286.
 
 [skill-candidate] `multi-agent-inbox-dispatch` (placement: personal): Given a session output (brainstorm, review, report), composes role-specific inbox messages for 2+ target agents with genuinely different framings tailored to each role's concerns, and writes them in one operation. First seen: 2026-05-04, session a05d9286.
+
+## 2026-05-05 — Dependabot batch session (TEC-8389)
+
+[2026-05-05] For Carrum Rails repos, `gems.carrumhealth.com` (private gem server) is not accessible from agent machines. Use the Dependabot PR's Gemfile.lock diff as ground truth for Rails gem versions, or use the Dependabot branch as a base. Do not attempt `bundle update` for private-source gems without a valid credential or local cache.
+
+[2026-05-05] When manually editing a Gemfile.lock to bump a gem with `< N` upper-bound constraints (e.g. activesupport requiring `minitest < 6`), all transitive deps must also be updated. Use `bundle update <gem> <dep>` rather than editing by hand — manual edits silently break CI.
+
+[2026-05-05] `bundle update` can resolve gems to a higher minor version than the Dependabot target (e.g. rack 3.2.6 vs 3.1.21 target). When this happens, flag it explicitly in the PR description. Add a temporary Gemfile pin (e.g. `gem 'rack', '~> 3.1.0'`) if the reviewer wants patch-only behavior.
+
+[2026-05-05] patient-app-mobile CircleCI E2E tests (`e2e_tests_iphone`, `e2e_tests_web`) are infrastructure-sensitive and frequently flaky. Always check recent master CI runs before attributing E2E failures to a branch change.
+
+[2026-05-05] Use `gh api repos/<owner>/<repo>/pulls/<number> --method PATCH --field title="..."` to rename PR titles. Avoid `gh pr edit --title` — it has GraphQL deprecation issues with Projects classic.
+
+[2026-05-05] [skill-candidate] `dependabot-batch` (placement: employer:carrum): End-to-end skill that inventories open Dependabot PRs, runs parallel package research agents, compiles a review doc, opens per-repo batch draft PRs via a fleet, creates Jira Task + subtasks, and sends an EM handoff message. First seen: TEC-6093 (prior sprint); second occurrence: TEC-8389 (2026-05-05). Passes 5/5 rubric gates — ready to formalize.

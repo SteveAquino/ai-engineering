@@ -251,7 +251,7 @@ VAULT_PATH = "/Users/stevenaquino/Documents/Obsidian Vault: Work"
 TODAY = datetime.date.today()
 date_label = TODAY.strftime("%Y-%m-%d")
 
-plan_path = f"{VAULT_PATH}/Inbox Summaries/Daily Plans/{date_label} Daily Plan.md"
+plan_path = f"{VAULT_PATH}/Daily Plans/{date_label} Daily Plan.md"
 os.makedirs(os.path.dirname(plan_path), exist_ok=True)
 with open(plan_path, "w") as f:
     f.write(PLAN_CONTENT)
@@ -279,9 +279,9 @@ new_start_of_day = f"""## 🌅 Start of Day
 
 | | |
 |---|---|
-| 📅 [[Inbox Summaries/Daily Plans/{TODAY} Daily Plan\\|Today's Plan]] | 📬 [[Inbox Summaries/Email/{TODAY} Email Summary\\|Email Summary]] |
+| 📅 [[Daily Plans/{TODAY} Daily Plan\\|Today's Plan]] | 📬 [[Inbox Summaries/Email/{TODAY} Email Summary\\|Email Summary]] |
 | 💬 [[Inbox Summaries/Slack/{TODAY} Slack Summary\\|Slack Summary]] | 📋 [[Inbox Summaries/Jira/{TODAY} Jira Summary\\|Jira Summary]] |
-| 🐙 [[Inbox Summaries/GitHub/{TODAY} GitHub Summary\\|GitHub Summary]] | 🌙 [[Inbox Summaries/Daily Plans/{TODAY} End of Day\\|End of Day Notes]] |"""
+| 🐙 [[Inbox Summaries/GitHub/{TODAY} GitHub Summary\\|GitHub Summary]] | 🌙 [[Daily Notes/{TODAY} End of Day\\|End of Day Notes]] |"""
 
 updated = re.sub(
     r"## 🌅 Start of Day.*?(?=\n---|\n## )",
