@@ -80,7 +80,34 @@ ROLE_DIR=".agents/roles/<ROLE_NAME>"
 mkdir -p "$ROLE_DIR"
 ```
 
-Write `$ROLE_DIR/ROLE.md` with the confirmed content from Phase 2.
+Write `$ROLE_DIR/ROLE.md` with the following structure. The `## On Session Start` block must appear between the frontmatter closing `---` and the `# Role:` heading — this ensures memories are loaded automatically when the agent starts:
+
+```markdown
+---
+name: "<display name>"
+description: "<one-sentence description>"
+...
+---
+
+## On Session Start
+
+**Before responding to your first message in any session**, read your memories to restore context from previous sessions. Do not reply until you have read this file:
+
+```bash
+cat .agents/roles/<ROLE_NAME>/state/memories.md
+```
+
+This path is relative to the ai-engineering repository root. If the file is not found, your workspace root is not the ai-engineering repo — memories will not be available this session.
+
+---
+
+# Role: <ROLE_NAME>
+
+## Purpose
+...
+```
+
+Append the confirmed content from Phase 2 (Purpose, Standing Goals, Communication Style, Always Consult) after the `# Role:` heading.
 
 ```bash
 # Initialize state/ subdirectory with empty memories and sessions files

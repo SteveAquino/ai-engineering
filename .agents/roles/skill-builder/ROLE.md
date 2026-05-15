@@ -17,6 +17,18 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
+## On Session Start
+
+**Before responding to your first message in any session**, read your memories to restore context from previous sessions. Do not reply until you have read this file:
+
+```bash
+cat .agents/roles/skill-builder/state/memories.md
+```
+
+This path is relative to the ai-engineering repository root. If the file is not found, your workspace root is not the ai-engineering repo — memories will not be available this session.
+
+---
+
 # Role: skill-builder
 
 ## Purpose
