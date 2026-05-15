@@ -63,8 +63,40 @@ Workflow skills:
 - `create-skill` - scaffold a new skill
 - `weekly-team-retro` - generate a weekly team retrospective
 
+## VS Code Agent Integration
+
+Each `ROLE.md` doubles as a VS Code agent definition. It includes a YAML frontmatter block (tools, model, handoffs) that VS Code reads to surface the role as a named agent in the chat UI.
+
+VS Code looks for agent definitions in `~/.copilot/agents/*.agent.md`. Rather than maintaining a separate copy, each entry is a symlink back to the canonical `ROLE.md` in this repo:
+
+```
+~/.copilot/agents/<role>.agent.md  →  <repo>/.agents/roles/<role>/ROLE.md
+```
+
+### Setting up symlinks on a new machine
+
+Run once after cloning the repo:
+
+```bash
+REPO="/path/to/ai-engineering"
+AGENTS_DIR="$HOME/.copilot/agents"
+mkdir -p "$AGENTS_DIR"
+
+for role in engineering-manager-assistant scheduling-assistant skill-builder software-engineering-assistant; do
+  ln -sf "$REPO/.agents/roles/$role/ROLE.md" "$AGENTS_DIR/$role.agent.md"
+done
+```
+
+### Adding a new role
+
+1. Scaffold the role with `create-role` (or manually under `.agents/roles/<name>/`)
+2. Add VS Code frontmatter to `ROLE.md` — name, description, tools, model
+3. Add the symlink: `ln -sf "$REPO/.agents/roles/<name>/ROLE.md" "$HOME/.copilot/agents/<name>.agent.md"`
+4. Add a row to the Roles table above
+
 ## Conventions
 
 - Keep committed skills portable and employer-neutral.
 - Keep machine-specific paths, team context, and private operational state in ignored role files.
 - Do not use `AGENTS.md` for role personas; use `ROLE.md` so it is not confused with ambient repo instructions.
+- `ROLE.md` is the single source of truth — the VS Code agent entry is always a symlink, never a copy.

@@ -161,6 +161,26 @@ macOS/Linux:
 ln -sfn "$HOME/path/to/ai-engineering/.agents/roles" "$HOME/.agents/roles"
 ```
 
+### VS Code (GitHub Copilot Chat)
+
+VS Code surfaces roles as named agents in the Copilot Chat UI. It reads agent definitions from `~/.copilot/agents/*.agent.md`. Each `ROLE.md` in this repo doubles as an agent definition — it includes a YAML frontmatter block with the tool list, model preference, and handoff buttons that VS Code reads.
+
+Rather than maintaining a separate copy, create a symlink from each agent entry to the canonical `ROLE.md`:
+
+```bash
+REPO="$HOME/path/to/ai-engineering"
+AGENTS_DIR="$HOME/.copilot/agents"
+mkdir -p "$AGENTS_DIR"
+
+for role in engineering-manager-assistant scheduling-assistant skill-builder software-engineering-assistant; do
+  ln -sf "$REPO/.agents/roles/$role/ROLE.md" "$AGENTS_DIR/$role.agent.md"
+done
+```
+
+`ROLE.md` is the single source of truth — the VS Code agent entry is always a symlink, never a copy. When you update a role's instructions or frontmatter, the change is immediately reflected in VS Code.
+
+When adding a new role, add the symlink as part of the `Adding A Role` workflow.
+
 ### GitHub Copilot CLI
 
 For tools that support explicit skill directories, point them at the canonical skills directory:
@@ -251,3 +271,11 @@ Invoke `create-skill`. It classifies whether the request is a portable personal 
 ## Adding A Role
 
 Invoke `create-role`. It scaffolds the role's `ROLE.md` and initializes the ignored local state files that `assume-role`, `remember`, and `dream` use.
+
+After creating a role, add the VS Code agent symlink:
+
+```bash
+ln -sf "$REPO/.agents/roles/<name>/ROLE.md" "$HOME/.copilot/agents/<name>.agent.md"
+```
+
+Also add a row to the Roles table in `AGENTS.md`.

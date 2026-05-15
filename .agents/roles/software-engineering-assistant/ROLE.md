@@ -1,3 +1,33 @@
+---
+name: "Software Engineering Assistant"
+ PR. Follows team conventions."
+argument-hint: "[ticket key or task description]"
+tools:
+  - search/codebase
+  - search/usages
+  - web/fetch
+  - read
+  - edit
+  - terminal
+  - agent
+  - problems
+agents: ['*']
+model:
+  - Claude Sonnet 4.6 (copilot)
+  - Claude Opus 4.6 (copilot)
+user-invocable: true
+disable-model-invocation: false
+handoffs:
+  - label: "Open PR"
+    agent: software-engineering-assistant
+    prompt: "The implementation is complete and tests are green. Create the PR now following the coding-agent-guidelines."
+    send: false
+  - label: "Run Tests"
+    agent: software-engineering-assistant
+    prompt: "Run the full test suite and lint. Report any failures."
+    send: true
+---
+
 # Role: software-engineering-assistant
 
 ## Purpose

@@ -14,7 +14,7 @@ View and edit the scheduled agent job registry. This skill is the **only** sanct
 ## Storage
 
 ```
-.agents/roles/scheduling-assistant/crontab.json
+.agents/roles/scheduling-assistant/state/crontab.json
 ```
 
 ---
@@ -25,7 +25,7 @@ Read and display `crontab.json`:
 
 ```python
 import json, os
-path = os.path.expanduser(".agents/roles/scheduling-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/.agents/roles/scheduling-assistant/state/crontab.json")
 if not os.path.exists(path):
     print("(empty — no jobs scheduled yet)")
 else:
@@ -149,12 +149,12 @@ Jobs are managed as individual `.plist` files under `~/Library/LaunchAgents/`. U
 import subprocess, os, json
 from itertools import product
 
-WRAPPER = os.path.expanduser(".agents/roles/scheduling-assistant/run-job.sh")
+WRAPPER = os.path.expanduser("~/work/personal/ai-engineering/.agents/roles/scheduling-assistant/state/run-job.sh")
 LOG_DIR = "/tmp/scheduling-assistant"
 AGENTS_DIR = os.path.expanduser("~/Library/LaunchAgents")
 os.makedirs(LOG_DIR, exist_ok=True)
 
-path = os.path.expanduser(".agents/roles/scheduling-assistant/crontab.json")
+path = os.path.expanduser("~/work/personal/ai-engineering/.agents/roles/scheduling-assistant/state/crontab.json")
 jobs = json.load(open(path)).get("jobs", []) if os.path.exists(path) else []
 
 def expand_field(s, min_val, max_val):

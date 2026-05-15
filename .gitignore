@@ -3,6 +3,15 @@
 .agents/roles/*/state/
 .agents/roles/*/skills/*/references/
 
+# Safety net: catch any state files mistakenly placed at the role root
+.agents/roles/*/memories.md
+.agents/roles/*/sessions.md
+.agents/roles/*/inbox/
+.agents/roles/*/logs/
+
+# macOS metadata
+.DS_Store
+
 # Team-specific skill overlays - never commit
 .agents/skills/*/references/
 

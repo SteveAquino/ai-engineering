@@ -123,3 +123,27 @@ or provide additional links and context.
 ```bash
 ls "$(dirname "$0")/references/"*.md 2>/dev/null
 ```
+
+---
+
+## Fleet Mode
+
+This skill benefits from parallel subagent execution when the inbox has multiple messages, especially research reports.
+
+| Message type | Can parallelize? | How |
+|-------------|-----------------|-----|
+| Research report | ✅ | Launch one `evaluate-research` subagent per research message — all run concurrently |
+| Action requests | ⚠️ Sequential | Execute in order to avoid conflicting writes |
+| FYI / archive | ✅ | All can be archived in one pass |
+
+### Recommended invocation from EM role
+
+```
+Read all inbox files first (Phase 1–2).
+Classify all messages before acting on any.
+Launch all evaluate-research subagents in parallel (one per research message).
+Process non-research messages inline while research agents run.
+Collect research results and write Research Digest entries when agents complete.
+```
+
+This pattern keeps the inbox processing time bounded by the longest single evaluation, not the sum of all evaluations.

@@ -30,6 +30,7 @@ The committed source of truth is this repo's `.agents/skills/` directory, relati
 | [`schedule-self/SKILL.md`](../schedule-self/SKILL.md) | Install or update the system cron entry that automatically runs the scheduling-assistant on a recurring schedule to process its inbox. Run once to bootstrap the scheduler. |
 | [`session-reflect/SKILL.md`](../session-reflect/SKILL.md) | At the end of a work session, generate a structured reflection document covering what was built, friction points, novel patterns, memories to persist, and skills worth codifying. Routes findings to role memories or skill proposal files. |
 | [`weekly-team-retro/SKILL.md`](../weekly-team-retro/SKILL.md) | Generates a weekly engineering team retrospective. Fetches PR activity and resolved tickets for the week, collects qualitative EM notes per engineer via `ask_user`, and saves a persistent markdown file to `.agents/roles/engineering-manager-assistant/weekly-retros/`. |
+| [`one-on-one-prep/SKILL.md`](../one-on-one-prep/SKILL.md) | Prepare for a 1:1 meeting by gathering all interactions with a direct report over the last two weeks — GitHub PRs, Jira tickets, Obsidian notes, and inbox messages — and synthesizing them into a structured prep document. |
 
 ---
 

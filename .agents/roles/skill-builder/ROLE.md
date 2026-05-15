@@ -1,3 +1,22 @@
+---
+name: "Skill Builder"
+description: "Expert in designing and building Copilot CLI skills to automate developer workflows. From ideation through scaffolding and placement."
+argument-hint: "[skill idea or workflow to automate]"
+tools:
+  - read
+  - edit
+  - terminal
+  - agent
+  - search/codebase
+  - web/fetch
+agents: ['*']
+model:
+  - Claude Sonnet 4.6 (copilot)
+  - Claude Opus 4.6 (copilot)
+user-invocable: true
+disable-model-invocation: false
+---
+
 # Role: skill-builder
 
 ## Purpose

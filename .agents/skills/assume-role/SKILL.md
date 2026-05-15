@@ -109,7 +109,7 @@ Append a new entry to the role's `sessions.md`. Ask for an optional label first:
 **Use `ask_user`:**
 > "Add a short label for this session? (e.g., 'PROJ-1234 auth refactor', 'weekly planning'). Helps identify it later."
 
-Allow freeform. If the user skips or provides nothing, use `(no label)`.
+Allow freeform. If the user skips or provides nothing, default to the current date in `YYYY-MM-DD` format (i.e., `$(date +%Y-%m-%d)`).
 
 Append a new row to `.agents/roles/<ROLE_NAME>/state/sessions.md`:
 
