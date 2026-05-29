@@ -108,28 +108,67 @@ The exploration agent is the **main context-aware agent** (Agent 1). It runs exp
 ### Exploration instructions for Agent 1
 
 ```
-BEFORE producing any analysis or HTML, complete the following exploration steps:
+BEFORE producing any analysis or HTML, complete the following exploration steps IN ORDER:
 
-1. **Enumerate source candidates.** Based on the subject, identify everything that might be relevant:
-   - For a codebase: README, schema.rb, Gemfile, routes.rb, core models, controllers, service objects, specs, OpenAPI/Swagger specs, CI config, docs/ directory
-   - For a system/architecture: all referenced docs, per-service docs, OpenAPI specs in each service repo, ADRs, diagrams
-   - For a document/RFC: the document itself plus any linked or referenced documents
-   - For an interview submission: all source files, tests, README, any referenced libraries or docs
-   - For a technical concept: primary documentation, changelog, known limitations docs, comparison guides
+### Step 1: Workspace discovery (always first)
 
-2. **Read everything accessible.** Use the file reading and search tools to read each candidate source. Do not skip files because they seem less important — a gap you skip may be the most significant finding.
+Do NOT assume paths from the subject description. Discover what actually exists:
 
-3. **Record what you found and what you did not find.** For each source you attempted to read, record:
-   - Path or URL
-   - Type (code, doc, spec, config, diagram, etc.)
-   - Status: FOUND (read successfully) or GAP (expected to exist, not found/accessible)
-   - Brief note on what it contained or why it matters
+1a. Identify the root directory of the subject (the repo, doc, or folder you were given).
+1b. List the PARENT directory of that root to discover sibling repos and related projects.
+    - e.g., if the subject is `/Users/foo/work/acme/core-api`, run `ls /Users/foo/work/acrum/`
+    - This surfaces related services, worktrees, forks, and companion repos you would otherwise miss.
+1c. For each sibling that looks relevant (same org, same product, same naming pattern), note it as
+    a candidate source and add it to your reading list.
 
-4. **Surface immediate structural observations.** Before producing analysis, note any anomalies discovered during exploration (e.g., "Found 3 service repos but only 1 has OpenAPI docs", "README references a schema that doesn't match the actual schema", "No test files found").
+Never mark a repo as missing based on what was in the task description — only based on what
+`ls` actually returns. If `ls` shows it exists, it exists.
 
-5. **Then proceed to analysis** using the complete picture from the exploration phase.
+### Step 2: Enumerate source candidates
 
-The exploration log feeds directly into the mandatory Sources & Citations section of the final HTML page.
+Based on the subject type and what you discovered in Step 1, build a reading list:
+- **Codebase**: README, schema.rb, Gemfile, routes.rb, core models, controllers, service objects,
+  specs, OpenAPI/Swagger specs (swagger/, swagger.yaml, openapi.yaml, openapi.json, docs/api/,
+  public/api-docs/), CI config, docs/
+- **System/architecture**: all referenced docs, per-service docs (from Step 1 discovery), OpenAPI
+  specs in each service repo, ADRs, diagrams, environment configs
+- **Document/RFC**: the document plus any linked or referenced documents
+- **Interview submission**: all source files, tests, README, any referenced libraries or docs
+- **Technical concept**: primary docs, changelog, known limitations, comparison guides
+
+### Step 3: Read everything on the list
+
+Use the Read and Glob tools to read each candidate. Do not skip files because they seem secondary.
+A gap you skip may be the most significant finding.
+
+### Step 4: Classify each source
+
+For every source you attempted to read, record:
+- Path
+- Type (code / doc / spec / config / diagram / other)
+- Status — use exactly one of:
+  - `FOUND` — read successfully
+  - `GAP:missing-file` — the REPO exists but this specific file (e.g., OpenAPI spec) is absent
+  - `GAP:repo-not-found` — the entire repo/service was not found anywhere on disk
+  - `GAP:access-error` — path exists but could not be read
+- Brief note on what it contained or what is missing
+
+**Important distinction**: `GAP:repo-not-found` is only valid if `ls` of the parent directory
+confirms the repo is genuinely absent. Do not infer a repo is missing from the task description.
+
+### Step 5: Surface structural observations
+
+Note anomalies before proceeding to analysis:
+- "Found N service repos; only M have OpenAPI specs"
+- "README references X but X does not exist"
+- "Services A, B, C have schema.rb; service D does not"
+
+### Step 6: Proceed to analysis
+
+Use the complete picture from exploration. Every finding in the analysis must be traceable
+to a specific source read in Steps 1–3.
+
+The exploration log feeds directly into the mandatory Sources & Citations section.
 ```
 
 ---
@@ -309,7 +348,8 @@ Return a JSON block (as an HTML comment) with every source you attempted:
 <!-- SOURCES_LOG
 [
   { "path": "/path/to/file.rb", "type": "code", "status": "FOUND", "note": "..." },
-  { "url": "https://...", "type": "doc", "status": "GAP", "note": "Expected OpenAPI spec, not found" }
+  { "path": "/path/to/missing.yaml", "type": "spec", "status": "GAP:missing-file", "note": "Repo exists; no OpenAPI spec found" },
+  { "path": "/path/to/absent-repo/", "type": "repo", "status": "GAP:repo-not-found", "note": "ls of parent confirms not present" }
 ]
 SOURCES_LOG -->
 ```
@@ -914,7 +954,12 @@ function toggleTheme() {
 
 4. **Entity Relationships section must have an SVG diagram.** If Agent 1 produced one, embed it. If not, produce one during assembly. No plain-text-only relationship section.
 
-5. **Sources & Citations section is mandatory.** Parse Agent 1's `<!-- SOURCES_LOG ... -->` comment to build the table. If no log was produced, list what files you know were read and mark any obvious gaps (e.g., "No OpenAPI spec found in service repos").
+5. **Sources & Citations section is mandatory.** Parse Agent 1's `<!-- SOURCES_LOG ... -->` comment to build the table. Status column rendering:
+   - `FOUND` → `<td class="win">Found</td>`
+   - `GAP:missing-file` → `<td class="lose">Missing file</td>` (repo exists, file absent — a real documentation gap)
+   - `GAP:repo-not-found` → `<td class="lose">Repo not found</td>` (confirmed absent via ls)
+   - `GAP:access-error` → `<td style="color:var(--yellow)">Access error</td>`
+   If no log was produced, list every file you know was read and run a best-effort gap check.
 
 6. **Aristotelian section is perspective-independent.** Never wrap it in a perspective panel.
 
