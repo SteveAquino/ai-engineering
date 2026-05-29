@@ -266,8 +266,10 @@ You are not being unfair. You are applying a high bar rigorously and focusing on
 
 ## What to produce
 
-Return structured HTML content only. Wrap everything in:
-<div class="perspective-panel" data-perspective="adversarial">...</div>
+Return structured HTML content only. Wrap everything in exactly:
+`<div class="perspective-panel" data-perspective="adversarial">...</div>`
+
+Do NOT use class="visible", id attributes, or any other attribute name — only `data-perspective="adversarial"` and `class="perspective-panel"`. The JavaScript toggle depends on this exact pattern.
 
 Produce:
 1. A verdict: <div class="callout red"> with bold verdict and 2–3 sentences of evidence-based reasoning
@@ -300,8 +302,10 @@ You are not ignoring real problems. You are contextualizing them fairly, weighin
 
 ## What to produce
 
-Return structured HTML content only. Wrap everything in:
-<div class="perspective-panel" data-perspective="supportive">...</div>
+Return structured HTML content only. Wrap everything in exactly:
+`<div class="perspective-panel" data-perspective="supportive">...</div>`
+
+Do NOT use class="visible", id attributes, or any other attribute name — only `data-perspective="supportive"` and `class="perspective-panel"`. The JavaScript toggle depends on this exact pattern.
 
 Produce:
 1. A verdict: <div class="callout green"> with bold verdict and 2–3 sentences of evidence-based reasoning
@@ -498,6 +502,24 @@ setPerspective('standard');
 3. **Aristotelian section gets a clear intro note** that it was produced by an isolated subagent with no pre-conditioning context.
 4. **Sidebar nav** must link to every section present in the page. Group under nav-section labels matching the content type.
 5. **If an agent didn't finish**, note it visually with a `<div class="callout yellow">Agent result pending — refresh or re-run</div>` placeholder.
+
+### CRITICAL: Perspective panel HTML contract
+
+**Do not improvise attribute names, class names, or JavaScript.** Use this exact pattern — no variations:
+
+```html
+<!-- CORRECT — required pattern -->
+<div class="perspective-panel active" data-perspective="standard">...</div>
+<div class="perspective-panel" data-perspective="supportive">...</div>
+<div class="perspective-panel" data-perspective="adversarial">...</div>
+```
+
+Forbidden alternatives — these break the toggle:
+- `class="visible"` instead of `class="active"` ❌
+- `id="panel-xxx-standard"` instead of `data-perspective="standard"` ❌
+- Custom `setPerspective` implementations that differ from the one in this skill ❌
+
+The JavaScript in this skill uses `el.dataset.perspective === p` and `.classList.toggle('active', ...)`. Any deviation breaks the toggle. Copy the JS verbatim from the **Perspective Toggle System** section above.
 
 ---
 
