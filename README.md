@@ -181,6 +181,30 @@ done
 
 When adding a new role, add the symlink as part of the `Adding A Role` workflow.
 
+### OpenCode
+
+OpenCode discovers user-global skills from `~/.agents/skills/` and loads global instructions from `~/.config/opencode/AGENTS.md`.
+
+**1. Skills symlink** — expose this repo's skills globally:
+
+```bash
+mkdir -p "$HOME/.agents"
+ln -sfn "$HOME/path/to/ai-engineering/.agents/skills" "$HOME/.agents/skills"
+```
+
+**2. Global AGENTS.md** — load role context and session bootstrap instructions in every OpenCode session:
+
+```bash
+cp "$HOME/path/to/ai-engineering/.agents/references/opencode-agents-template.md" \
+   "$HOME/.config/opencode/AGENTS.md"
+```
+
+Then edit `~/.config/opencode/AGENTS.md` to replace the repo path placeholder with the actual clone location.
+
+Alternatively, run the `setup-agent-symlinks` skill — it handles both steps and prompts for the repo path.
+
+**3. Session dir bootstrap** — OpenCode writes `SESSION_DIR` to `.agents/references/local.md` at the start of every session (via the instruction in `~/.config/opencode/AGENTS.md`). All skills read session paths from there, making them provider-agnostic.
+
 ### GitHub Copilot CLI
 
 For tools that support explicit skill directories, point them at the canonical skills directory:

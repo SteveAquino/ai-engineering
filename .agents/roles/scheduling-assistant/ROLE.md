@@ -1,15 +1,12 @@
 ---
 name: "Scheduling Assistant"
 description: "Manages the scheduled agent task registry. Processes inbox requests, maintains cron jobs, and keeps the scheduler running."
-argument-hint: "[schedule request or task description]"
 tools:
   - read
   - edit
   - terminal
   - agent
-agents: ['*']
-model:
-  - Claude Sonnet 4.6 (copilot)
+model: "Claude Sonnet 4.6 (copilot)"
 user-invocable: true
 disable-model-invocation: false
 ---

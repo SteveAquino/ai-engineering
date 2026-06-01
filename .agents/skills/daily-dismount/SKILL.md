@@ -54,7 +54,8 @@ Find all role sessions from **today** that don't yet have a `session-reflection.
 ```bash
 TODAY=$(date +%Y-%m-%d)
 ROLES_DIR="<from local.md>"
-SESSION_STATE="$HOME/.copilot/session-state"
+SESSION_DIR=$(grep "^SESSION_DIR=" .agents/references/local.md | cut -d= -f2-)
+SESSION_BASE=$(dirname "$SESSION_DIR")
 
 # For each role, find today's sessions from sessions.md
 for role_dir in "$ROLES_DIR"/*/; do
@@ -70,7 +71,7 @@ for role_dir in "$ROLES_DIR"/*/; do
         [ "$session_id" = "—" ] && continue
 
         # Check if session-reflection.md exists
-        reflection="$SESSION_STATE/$session_id/files/session-reflection.md"
+        reflection="$SESSION_BASE/$session_id/files/session-reflection.md"
         if [ ! -f "$reflection" ]; then
             echo "NO_REFLECTION|$role|$session_id|$label"
         else
@@ -95,6 +96,7 @@ Pull from available sources to inform the end-of-day summary. Do all reads in pa
 ```bash
 VAULT="<from local.md>"
 TODAY=$(date +%Y-%m-%d)
+SESSION_DIR=$(grep "^SESSION_DIR=" .agents/references/local.md | cut -d= -f2-)
 
 # Today's daily plan (if it exists)
 cat "$VAULT/Daily Plans/$TODAY Daily Plan.md" 2>/dev/null
@@ -102,11 +104,8 @@ cat "$VAULT/Daily Plans/$TODAY Daily Plan.md" 2>/dev/null
 # Today's inbox/email summary (if clean-inbox was run)
 cat "$VAULT/Inbox Summaries/Email/$TODAY Email Summary.md" 2>/dev/null
 
-# Today's session checkpoints (most recent role session)
-SESSION_STATE="$HOME/.copilot/session-state"
-# Read the most recent checkpoint from the current session
-LATEST_SESSION=$(ls -td "$SESSION_STATE"/*/ 2>/dev/null | head -1)
-LATEST_CHECKPOINT=$(ls "$LATEST_SESSION/checkpoints/"*.md 2>/dev/null | sort -r | head -1)
+# Today's session checkpoints
+LATEST_CHECKPOINT=$(ls "$SESSION_DIR/checkpoints/"*.md 2>/dev/null | sort -r | head -1)
 [ -n "$LATEST_CHECKPOINT" ] && cat "$LATEST_CHECKPOINT"
 
 # Any 1:1 notes created today (check for today's date in People/One on Ones/)
@@ -234,7 +233,7 @@ Then sign off:
 - **Daily Notes location:** `$VAULT_PATH/Daily Notes/YYYY-MM-DD End of Day.md`
 - **Daily Plans location:** `$VAULT_PATH/Daily Plans/YYYY-MM-DD Daily Plan.md`
 - **Inbox summary location:** `$VAULT_PATH/Inbox Summaries/Email/YYYY-MM-DD Email Summary.md`
-- **Session state:** `~/.copilot/session-state/<SESSION_ID>/`
-- **Session reflections:** `~/.copilot/session-state/<SESSION_ID>/files/session-reflection.md`
+- **Session dir:** read from `.agents/references/local.md` as `SESSION_DIR`
+- **Session reflections:** `$SESSION_DIR/files/session-reflection.md`
 - **Roles directory:** set in `.agents/references/local.md` as `ROLES_DIR`
 - **Related skills:** `session-reflect`, `clean-inbox`, `prepare-daily-plan`

@@ -157,8 +157,10 @@ Use the `generate-report` technique to write the report to the session state fol
 ### Output File
 
 ```python
-import os
-SESSION_DIR = os.path.expanduser("~/.copilot/session-state/<SESSION_ID>")
+import os, re, pathlib
+
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
 SLUG = RESEARCH_QUESTION.lower()[:40].replace(" ", "-").replace("/", "-")
 OUTPUT_FILE = os.path.join(SESSION_DIR, f"{SLUG}-research.md")
 ```
@@ -254,6 +256,6 @@ Tell the user:
 ## Reference
 
 - File-writing technique: [`generate-report/SKILL.md`](../generate-report/SKILL.md)
-- Session state folder: `~/.copilot/session-state/<SESSION_ID>/`
+- Session dir: read from `.agents/references/local.md` as `SESSION_DIR`
 - Subagent launching: `task` tool with `agent_type: "general-purpose"`, `mode: "background"`
 - Reading results: `read_agent` with each agent's ID after notification

@@ -11,22 +11,12 @@ Use this skill at the end of a work session to capture learnings before they're 
 
 ## Phase 0 — Locate Session Context
 
-Determine the current session ID and state folder:
+Read `SESSION_DIR` from `.agents/references/local.md`:
 
 ```bash
-# Session state (Copilot CLI): ~/.copilot/session-state/<SESSION_ID>/
-ls ~/.copilot/session-state/ | sort -r | head -5
-```
-
-The current session folder is the one matching the active session. Look for:
-- `plan.md` — task plan and notes
-- `checkpoints/` — prior checkpoint summaries
-- `files/` — any existing reflection or proposal files
-
-```bash
-SESSION_DIR=$(ls -td ~/.copilot/session-state/*/ | head -1)
+SESSION_DIR=$(grep "^SESSION_DIR=" .agents/references/local.md | cut -d= -f2-)
 echo "Session: $SESSION_DIR"
-ls "$SESSION_DIR"
+ls "$SESSION_DIR" 2>/dev/null || echo "(session dir not yet created)"
 ls "$SESSION_DIR/files/" 2>/dev/null || echo "(no files yet)"
 ls "$SESSION_DIR/checkpoints/" 2>/dev/null | head -10
 ```
@@ -204,7 +194,7 @@ Suggest next steps:
 
 ## Reference
 
-- Session state (Copilot CLI): `~/.copilot/session-state/<SESSION_ID>/`
+- Session dir: read from `.agents/references/local.md` as `SESSION_DIR`
 - Roles: `.agents/roles/`
 - Memory routing: invoke `remember` skill
 - Skill creation: invoke `create-skill` skill with a proposal file as the brief

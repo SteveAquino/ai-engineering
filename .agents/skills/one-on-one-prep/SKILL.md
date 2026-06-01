@@ -266,11 +266,12 @@ After gathering all signals, categorize everything into the prep document struct
 Write the prep document to the session `files/` directory.
 
 ```python
-import os
+import os, re, pathlib
 from datetime import datetime
 
-SESSION_ID = "<CURRENT_SESSION_ID>"
-SESSION_FILES = os.path.expanduser(f"~/.copilot/session-state/{SESSION_ID}/files")
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+SESSION_FILES = os.path.join(SESSION_DIR, "files")
 os.makedirs(SESSION_FILES, exist_ok=True)
 
 PERSON_SLUG = "<PERSON_NAME>".lower().replace(" ", "-")

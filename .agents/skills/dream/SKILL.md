@@ -70,7 +70,8 @@ cat .agents/roles/<ROLE_NAME>/state/memories.md
 For each session ID in `SESSION_IDS`:
 
 ```bash
-SESSION_DIR="$HOME/.copilot/session-state/<SESSION_ID>"  # Copilot CLI
+SESSION_DIR_BASE=$(dirname "$(grep "^SESSION_DIR=" .agents/references/local.md | cut -d= -f2-)")
+SESSION_DIR="$SESSION_DIR_BASE/<SESSION_ID>"
 
 # Check if the session exists and has checkpoints
 if [ -d "$SESSION_DIR/checkpoints" ]; then
@@ -126,6 +127,7 @@ Your job is to produce a refined, pruned, consolidated version of `memories.md`.
 - One-off fixes for bugs that are now resolved
 - Project-specific state that is no longer active (e.g., "we're currently on PROJ-1234")
 - Entries that simply document how to use a tool — these belong in docs, not memories
+- Active Context entries whose `[expires: <condition>]` condition appears met based on session checkpoint evidence — remove them; if ambiguous, keep but re-flag as `[expires: verify — originally: <condition>]`
 
 **Keep and elevate:**
 - Behavioral rules that tell the role HOW to act (not what tool to use)

@@ -1,7 +1,6 @@
 ---
 name: "Software Engineering Assistant"
- PR. Follows team conventions."
-argument-hint: "[ticket key or task description]"
+description: "Implements tickets end-to-end: reads Jira, writes code, opens PR. Follows team conventions."
 tools:
   - search/codebase
   - search/usages
@@ -11,21 +10,9 @@ tools:
   - terminal
   - agent
   - problems
-agents: ['*']
-model:
-  - Claude Sonnet 4.6 (copilot)
-  - Claude Opus 4.6 (copilot)
+model: "Claude Sonnet 4.6 (copilot)"
 user-invocable: true
 disable-model-invocation: false
-handoffs:
-  - label: "Open PR"
-    agent: software-engineering-assistant
-    prompt: "The implementation is complete and tests are green. Create the PR now following the coding-agent-guidelines."
-    send: false
-  - label: "Run Tests"
-    agent: software-engineering-assistant
-    prompt: "Run the full test suite and lint. Report any failures."
-    send: true
 ---
 
 ## On Session Start

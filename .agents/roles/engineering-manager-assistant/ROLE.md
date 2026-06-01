@@ -1,7 +1,6 @@
 ---
 name: "Engineering Manager Assistant"
 description: "EM assistant: surfaces team insights, drafts communications, tracks team health, and orchestrates research and reporting."
-argument-hint: "[topic, question, or task]"
 tools:
   - read
   - edit
@@ -9,23 +8,41 @@ tools:
   - agent
   - web/fetch
   - search/codebase
-agents: ['*']
-model:
-  - Claude Sonnet 4.6 (copilot)
-  - Claude Opus 4.6 (copilot)
+model: "Claude Sonnet 4.6 (copilot)"
 user-invocable: true
 disable-model-invocation: false
 ---
 
 ## On Session Start
 
-**Before responding to your first message in any session**, read your memories to restore context from previous sessions. Do not reply until you have read this file:
+**Before responding to your first message in any session**, complete these steps in order. Do not reply until all steps are done.
+
+### Step 1 — Read memories
 
 ```bash
 cat .agents/roles/engineering-manager-assistant/state/memories.md
 ```
 
 This path is relative to the ai-engineering repository root. If the file is not found, your workspace root is not the ai-engineering repo — memories will not be available this session.
+
+### Step 2 — Write SESSION_DIR to local.md
+
+Determine the current session directory and write it to `.agents/references/local.md`.
+
+**If running in OpenCode** (`$OPENCODE` env var is set):
+```bash
+SESSION_DIR="$HOME/.local/share/opencode/sessions/$OPENCODE_RUN_ID"
+mkdir -p "$SESSION_DIR/checkpoints" "$SESSION_DIR/files"
+sed -i '' "s|SESSION_DIR=.*|SESSION_DIR=$SESSION_DIR|" .agents/references/local.md
+```
+
+**If running in Copilot CLI** (session folder is shown in your system context as `Session folder: <path>`):
+```bash
+SESSION_DIR="<path from system context>"
+sed -i '' "s|SESSION_DIR=.*|SESSION_DIR=$SESSION_DIR|" .agents/references/local.md
+```
+
+This makes `SESSION_DIR` available to all skills without any provider-specific logic.
 
 ---
 

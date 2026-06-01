@@ -63,6 +63,17 @@ Workflow skills:
 - `create-skill` - scaffold a new skill
 - `weekly-team-retro` - generate a weekly team retrospective
 
+## Tool Setup
+
+Run `setup-agent-symlinks` once after cloning on a new machine. It creates:
+
+- `~/.agents/skills` → `.agents/skills` (OpenCode, Codex)
+- `~/.claude/skills` → `.agents/skills` (Claude Code)
+- `~/.copilot/agents/*.agent.md` → `.agents/roles/*/ROLE.md` (VS Code)
+- `~/.config/opencode/AGENTS.md` from the repo template (OpenCode session bootstrap)
+
+See `README.md` → Tool Setup for full details and manual instructions.
+
 ## VS Code Agent Integration
 
 Each `ROLE.md` doubles as a VS Code agent definition. It includes a YAML frontmatter block (tools, model, handoffs) that VS Code reads to surface the role as a named agent in the chat UI.

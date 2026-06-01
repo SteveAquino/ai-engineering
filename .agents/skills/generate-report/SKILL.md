@@ -148,9 +148,12 @@ EOF
 Use the `create` tool to write one or more scripts to `/tmp/` (keep each under ~8KB), then run them:
 
 ```python
-import os
+import os, re, pathlib
 
-OUT = os.path.expanduser("~/.copilot/session-state/<SESSION_ID>/<filename>.md")
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+
+OUT = os.path.join(SESSION_DIR, "<filename>.md")
 TICK = chr(96)        # single backtick
 TICKS = chr(96) * 3   # triple backtick — for code fences and Mermaid
 

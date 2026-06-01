@@ -198,6 +198,10 @@ Based on content type (detected or configured), select the section set. Use this
 
 Launch all agents in a **single response**. Do not wait between launches. Agents run concurrently.
 
+**Model:** Use `claude-sonnet-4-5` (or the current Sonnet alias) for all subagents. Do **not** use Opus — synthesis tasks of this size cause Opus to stall indefinitely.
+
+**Compaction safety:** Each agent must write its output to a file before finishing (instructions included in each prompt below). Phase 3 reads from those files — not from agent return values — so context compaction between phases cannot lose work.
+
 Announce to the user: "Launching 5 parallel agents. This takes 3–5 minutes. I'll assemble the page when they finish."
 
 The five agents are:
@@ -352,6 +356,23 @@ Return a JSON block (as an HTML comment) with every source you attempted:
   { "path": "/path/to/absent-repo/", "type": "repo", "status": "GAP:repo-not-found", "note": "ls of parent confirms not present" }
 ]
 SOURCES_LOG -->
+
+## Output cap
+
+Limit your total HTML output to **400 lines**. Use concise callouts and tight prose — avoid restating section headers, filler transitions, or repeating findings across sections. Quality over volume.
+
+## REQUIRED: Write output to file before finishing
+
+After producing all content above, write your complete output to a file using the Write tool:
+
+```python
+import re, pathlib
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+OUTPUT_PATH = f"{SESSION_DIR}/files/ce-agent-1.html"
+```
+
+Write the full HTML content (Parts A + B + C) to `OUTPUT_PATH`. This is required — if you only return content without writing, it will be lost to context compaction.
 ```
 
 ---
@@ -396,6 +417,23 @@ Structure:
   - Minor: <span style="color:#8892a4;font-weight:700;font-size:11px;text-transform:uppercase">Minor</span>
 
 Be rigorous and specific. Every observation must cite actual evidence from the source material. This analysis should only be possible for someone who has read this specific subject.
+
+## Output cap
+
+Limit your total HTML output to **300 lines**. Be dense and precise — no filler transitions.
+
+## REQUIRED: Write output to file before finishing
+
+After producing all HTML content, write it to a file using the Write tool:
+
+```python
+import re, pathlib
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+OUTPUT_PATH = f"{SESSION_DIR}/files/ce-agent-2.html"
+```
+
+Write your complete HTML output to `OUTPUT_PATH`. This is required — content not written to disk will be lost to context compaction.
 ```
 
 ---
@@ -449,11 +487,24 @@ CRITICAL HTML CONTRACT — do NOT use class="visible", id="panel-xxx", or any ot
 Use only data-perspective="advocate" and class="perspective-panel". The JavaScript toggle depends on this exact pattern.
 
 CSS variables available: --bg, --surface, --surface2, --border, --text, --muted, --accent, --accent2, --green, --yellow, --red, --blue, --purple, --mono, and *-bg variants.
+
+## Output cap
+
+Limit your total HTML output to **300 lines** across all 5 panels. Be specific and tight — no filler.
+
+## REQUIRED: Write output to file before finishing
+
+After producing all HTML content, write it to a file using the Write tool:
+
+```python
+import re, pathlib
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+OUTPUT_PATH = f"{SESSION_DIR}/files/ce-agent-3.html"
 ```
 
----
-
-### Agent 4: Skeptic Perspective Agent (ISOLATED — no context)
+Write your complete HTML output to `OUTPUT_PATH`. This is required — content not written to disk will be lost to context compaction.
+``` (ISOLATED — no context)
 
 This agent receives **only the source material** and its assigned perspective. No session context.
 
@@ -502,11 +553,24 @@ CRITICAL HTML CONTRACT — do NOT use class="visible", id="panel-xxx", or any ot
 Use only data-perspective="skeptic" and class="perspective-panel". The JavaScript toggle depends on this exact pattern.
 
 CSS variables available: --bg, --surface, --surface2, --border, --text, --muted, --accent, --accent2, --green, --yellow, --red, --blue, --purple, --mono, and *-bg variants.
+
+## Output cap
+
+Limit your total HTML output to **300 lines** across all 5 panels. Be specific and tight — no filler.
+
+## REQUIRED: Write output to file before finishing
+
+After producing all HTML content, write it to a file using the Write tool:
+
+```python
+import re, pathlib
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+OUTPUT_PATH = f"{SESSION_DIR}/files/ce-agent-4.html"
 ```
 
----
-
-### Agent 5: Adversary Perspective Agent (ISOLATED — no context)
+Write your complete HTML output to `OUTPUT_PATH`. This is required — content not written to disk will be lost to context compaction.
+``` (ISOLATED — no context)
 
 This agent receives **only the source material** and its assigned perspective. No session context.
 
@@ -557,13 +621,54 @@ CRITICAL HTML CONTRACT — do NOT use class="visible", id="panel-xxx", or any ot
 Use only data-perspective="adversary" and class="perspective-panel". The JavaScript toggle depends on this exact pattern.
 
 CSS variables available: --bg, --surface, --surface2, --border, --text, --muted, --accent, --accent2, --green, --yellow, --red, --blue, --purple, --mono, and *-bg variants.
+
+## Output cap
+
+Limit your total HTML output to **300 lines** across all 5 panels. Be specific and tight — no filler.
+
+## REQUIRED: Write output to file before finishing
+
+After producing all HTML content, write it to a file using the Write tool:
+
+```python
+import re, pathlib
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+OUTPUT_PATH = f"{SESSION_DIR}/files/ce-agent-5.html"
 ```
 
----
+Write your complete HTML output to `OUTPUT_PATH`. This is required — content not written to disk will be lost to context compaction.
+```
 
-## Phase 3 — Assemble the HTML
+After all agents complete (or after 10 minutes, proceed with completed agents), assemble the final HTML page.
 
-After all agents complete (or after 10 minutes, proceed with completed agents and note any pending), assemble the final HTML page. Parse the `<!-- SOURCES_LOG ... -->` comment from Agent 1's output to build the Sources section.
+**Read agent outputs from files — not from agent return values.** This is compaction-safe: files survive context compaction; in-memory return values do not.
+
+```python
+import re, pathlib, os
+local_md = pathlib.Path(".agents/references/local.md").read_text()
+SESSION_DIR = re.search(r"^SESSION_DIR=(.+)$", local_md, re.MULTILINE).group(1)
+agent_files = {
+    1: f"{SESSION_DIR}/files/ce-agent-1.html",  # Main Analysis + Realist
+    2: f"{SESSION_DIR}/files/ce-agent-2.html",  # Aristotelian
+    3: f"{SESSION_DIR}/files/ce-agent-3.html",  # Advocate
+    4: f"{SESSION_DIR}/files/ce-agent-4.html",  # Skeptic
+    5: f"{SESSION_DIR}/files/ce-agent-5.html",  # Adversary
+}
+agent_outputs = {}
+for n, path in agent_files.items():
+    if os.path.exists(path) and os.path.getsize(path) > 0:
+        agent_outputs[n] = pathlib.Path(path).read_text()
+    else:
+        agent_outputs[n] = None  # Missing — substitute pending callout below
+```
+
+For any `agent_outputs[n]` that is `None`, substitute:
+```html
+<div class="callout yellow">Agent result pending — file not found. Re-run the skill to regenerate.</div>
+```
+
+Parse the `<!-- SOURCES_LOG ... -->` comment from `agent_outputs[1]` to build the Sources section.
 
 ### HTML page structure
 
@@ -1043,6 +1148,7 @@ Tell the user:
 
 - Design system: see HTML Design System Reference section above
 - Session dir: read from `.agents/references/local.md` as `SESSION_DIR`
-- Subagent launching: Task tool with `subagent_type: "general"` — launch all 5 in a single response
+- Subagent launching: Task tool with `subagent_type: "general"`, `model: "claude-sonnet-4-5"` — launch all 5 in a single response. Do **not** use Opus; synthesis tasks of this size cause Opus to stall.
+- Compaction safety: all agents write output to `{SESSION_DIR}/files/ce-agent-{N}.html`; Phase 3 reads from files, not return values
 - File writing: Write tool directly for HTML files > 8KB
 - Inspired by: interview take-home review session (2026-05-29, session `b9dc20af`)

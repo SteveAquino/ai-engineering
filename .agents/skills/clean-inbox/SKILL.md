@@ -43,20 +43,48 @@ If `VAULT_PATH` is missing, ask the user and offer to write `references/local.md
 
 ## Phase 0 — Check Current State
 
-Get a count and quick preview of the inbox. Use Python IMAP for the count (reliable), AppleScript for the message list:
+Get counts and list all unread messages via AppleScript. **Do not use Python IMAP** — Copilot CLI sub-agents refuse to execute scripts containing credentials, making IMAP unreliable in practice. AppleScript reads Apple Mail directly without credentials and is the authoritative approach.
 
-```python
-import imaplib
-# Load APP_PASSWORD from references/local.md
-imap = imaplib.IMAP4_SSL("imap.gmail.com")
-imap.login("saquino@carrumhealth.com", APP_PASSWORD)
-imap.select("INBOX")
-_, data = imap.search(None, "ALL")
-print(f"Inbox: {len(data[0].split())} messages")
-imap.logout()
+```bash
+# Total inbox count
+osascript -e 'tell application "Mail" to count messages of inbox'
+
+# Unread count
+osascript -e 'tell application "Mail" to count (messages of inbox whose read status is false)'
 ```
 
-Then list all messages with sender + subject (AppleScript still works for reading):
+Then list all unread messages with sender, subject, date, and To/CC:
+
+```bash
+osascript << 'ASCRIPT'
+tell application "Mail"
+    set unreadMsgs to (messages of inbox whose read status is false)
+    set output to ""
+    set msgCount to count of unreadMsgs
+    set limit to 80
+    if msgCount < limit then set limit to msgCount
+    repeat with i from 1 to limit
+        set m to item i of unreadMsgs
+        set mSender to sender of m
+        set mSubject to subject of m
+        set mDate to date sent of m as string
+        set mTo to ""
+        try
+            set mTo to (address of to recipient 1 of m) as string
+        end try
+        set output to output & "MSG_START" & linefeed
+        set output to output & "FROM:" & mSender & linefeed
+        set output to output & "SUBJECT:" & mSubject & linefeed
+        set output to output & "DATE:" & mDate & linefeed
+        set output to output & "TO:" & mTo & linefeed
+        set output to output & "MSG_END" & linefeed
+    end repeat
+    return output
+end tell
+ASCRIPT
+```
+
+> **Reading body text:** AppleScript's `content of m` property reliably reads message bodies for actionable messages. Use it in targeted follow-up lookups (see Phase 2, Step 1). IMAP is not needed.
 
 ---
 
@@ -76,11 +104,14 @@ Mentally (or in a scratch table) sort each message into one of four buckets:
 ```
 gemini-notes@google.com
 payments-noreply@google.com
+CloudPlatform-noreply@google.com   # Google Cloud Platform alerts (cert migrations, billing, etc.)
+noreply-findhub@google.com         # Google Find Hub
 team.notifications@herokumanager.com
 noreply@email.openai.com          # policy/marketing emails only
 no-reply@updates.braze.com
 info@peeklogic.com
 webinars@e.lucid.co
+e.lucid.co                         # Lucid webinar marketing
 no_reply@email.apple.com          # App Store Connect notifications
 testflight_no_reply@email.apple.com  # TestFlight build notifications
 secure-support@expo.dev           # Expo build/submission notifications — see "Deployment Activity" below
@@ -90,7 +121,13 @@ support@omadahealth.com
 no-reply@dtdg.co                  # Datadog alerts and digests
 automation@carrumhealth.atlassian.net
 noreply@sentry.io
+b2binfo.verizonwireless.com       # Verizon Business marketing
+communications@b2binfo.verizonwireless.com
+hello@udemybusiness.udemy.com     # Udemy Business marketing
+vince.ngai@okta.com               # Okta/Auth0 sales outreach (paused — no action needed)
 ```
+
+> **Note on Google Cloud platform emails:** These often look actionable (cert rotations, API deprecations) but are addressed to the account owner, not the EM specifically. Surface any with hard deadlines as engineering story proposals — don't mark silently without noting them.
 
 ### Known noise subject patterns (safe to bulk-archive)
 
@@ -106,10 +143,18 @@ noreply@sentry.io
 "Update to our privacy policy"
 "Kaitlin Pham is ready to work"     # Notion onboarding noise
 "New in April:"                     # Braze/vendor newsletters
+"New in May:"                       # Braze/vendor newsletters
+"What's new in"                     # Udemy/vendor newsletters
 "build succeeded"                   # Expo build noise
 "submission succeeded"              # Expo submission noise
 "is now available to test"          # TestFlight noise
 "has completed processing"          # App Store Connect processing noise
+"Summer Fridays"                    # Recurring company calendar event spam
+"Your Android device will soon join"  # Google Find Hub
+"Torchie Awards"                    # Braze marketing
+"Don't let an outage disrupt"       # Verizon Business marketing
+"Visualizing systems"               # Lucid webinar marketing
+"reconnecting:"                     # Vendor sales outreach (Okta, etc.)
 ```
 
 ### Deployment activity — archive but summarize
@@ -142,10 +187,13 @@ When in doubt, read the first line of the body to check if it addresses "Steve" 
 ### Deduplication rules
 
 When multiple copies of the same notification type exist, keep the **most recent** and archive the rest:
+- **Same sender + same subject (any count)** — mark all but newest as read. This catches burst-sent duplicates (e.g. Anthem partner emails sent 3–4 times in a minute).
 - Rippling HIPAA reminders (e.g. "due soon" vs. "due tomorrow" — keep the urgent one)
 - Huntress training reminders — keep 1
 - Kula RSVP reminders for the same candidate — keep 1
 - Past Kula RSVPs for already-decided candidates — archive all
+
+The deduplication AppleScript in Phase 2, Step 4 handles same-sender+same-subject automatically.
 
 ---
 
@@ -155,45 +203,65 @@ When multiple copies of the same notification type exist, keep the **most recent
 
 **The model:** You are Steve's inbox assistant. You read the mail, summarize what matters, and clear the noise. Nothing is lost — it's all captured in the Obsidian email summary. Steve only needs to open emails from real humans.
 
-### Step 1 — Extract all unread messages with content via Python
+### Step 1 — Read message bodies via AppleScript
 
-Use `imaplib` with the Gmail app password (from `references/local.md`) to fetch full message content. AppleScript can read subjects/senders but not body text reliably for all formats.
+**Do not use Python IMAP for body fetching** — sub-agents reject credential-containing scripts. Instead, use AppleScript's `content of m` property, which reads bodies directly from Apple Mail without credentials. Use this for targeted lookups on actionable messages identified in Phase 0.
 
-```python
-import imaplib, email, email.header, re
-from datetime import datetime
-
-# Load from references/local.md
-APP_PASSWORD = "<GMAIL_APP_PASSWORD>"
-EMAIL = "saquino@carrumhealth.com"
-
-imap = imaplib.IMAP4_SSL("imap.gmail.com")
-imap.login(EMAIL, APP_PASSWORD)
-imap.select("INBOX")
-
-_, data = imap.search(None, "UNSEEN")
-uids = data[0].split()
-
-messages = []
-for uid in uids:
-    _, msg_data = imap.fetch(uid, "(RFC822)")
-    msg = email.message_from_bytes(msg_data[0][1])
-    sender = email.header.decode_header(msg.get("From", ""))[0]
-    sender = sender[0].decode(sender[1] or "utf-8") if isinstance(sender[0], bytes) else sender[0]
-    subject = email.header.decode_header(msg.get("Subject", ""))[0]
-    subject = subject[0].decode(subject[1] or "utf-8") if isinstance(subject[0], bytes) else subject[0]
-    
-    # Extract body
-    body = ""
-    for part in msg.walk():
-        if part.get_content_type() == "text/plain":
-            body = part.get_payload(decode=True).decode("utf-8", errors="ignore")[:500]
-            break
-    
-    messages.append({"uid": uid.decode(), "sender": sender, "subject": subject, "body": body.strip()})
-
-imap.logout()
+```bash
+osascript << 'ASCRIPT'
+tell application "Mail"
+    set targetSubjects to {"[subject fragment 1]", "[subject fragment 2]"}
+    set output to ""
+    repeat with m in messages of inbox
+        set mSubject to subject of m
+        set foundMatch to false
+        repeat with ts in targetSubjects
+            if mSubject contains ts then
+                set foundMatch to true
+                exit repeat
+            end if
+        end repeat
+        if foundMatch then
+            set mSender to sender of m
+            set mDate to date sent of m as string
+            set mTo to ""
+            try
+                set mTo to (address of to recipient 1 of m)
+            end try
+            set mCC to ""
+            try
+                set ccList to ""
+                repeat with r in cc recipients of m
+                    set ccList to ccList & (address of r) & " "
+                end repeat
+                set mCC to ccList
+            end try
+            set mBody to ""
+            try
+                set mBody to content of m
+                if (length of mBody) > 800 then
+                    set mBody to (text 1 thru 800 of mBody)
+                end if
+            end try
+            set output to output & "=== MSG ===" & linefeed
+            set output to output & "FROM:" & mSender & linefeed
+            set output to output & "SUBJECT:" & mSubject & linefeed
+            set output to output & "DATE:" & mDate & linefeed
+            set output to output & "TO:" & mTo & linefeed
+            set output to output & "CC:" & mCC & linefeed
+            set output to output & "BODY:" & mBody & linefeed
+            set output to output & "=== END ===" & linefeed & linefeed
+        end if
+    end repeat
+    if (length of output) > 8000 then
+        return (text 1 thru 8000 of output) & linefeed & "[TRUNCATED]"
+    end if
+    return output
+end tell
+ASCRIPT
 ```
+
+Limit to messages you actually need body text for — typically: flagged external senders, SAML/SSO threads, compliance emails, and any email with an unclear subject.
 
 ### Step 2 — Classify each message
 
@@ -233,32 +301,123 @@ Write this summary into the `## 📬 Inbox Digest` section of the day's email su
 
 ### Step 4 — Mark non-human messages as read
 
-After summarizing, mark them all read via AppleScript:
+After summarizing, mark them all read via AppleScript. **⚠️ Critical:** Do NOT iterate over `messages of inbox whose read status is false` and modify inside the same loop — this causes a `-1719 Invalid index` error on Mail 16 as items are removed from the live collection mid-iteration. Always use the **two-pass pattern** below: collect first, then modify.
 
-```applescript
+```bash
 osascript << 'ASCRIPT'
 tell application "Mail"
-    set nonHumanPatterns to {"noreply", "no-reply", "no_reply", "donotreply", "notifications", "notification", "alert", "automated", "automation", "comments-noreply", "drive-shares", "atlassian.net", "jsm-notifications", "kula.ai", "rippling.com", "alerts.mycurricula.com", "mail.notion.so", "updates.braze.com", "email.apple.com", "expo.dev", "news2date.news", "e.zoom.us", "employeebenefits"}
+    set nonHumanPatterns to {"noreply", "no-reply", "no_reply", "donotreply", "notifications", "notification", "alert", "automated", "automation", "comments-noreply", "drive-shares", "atlassian.net", "jsm-notifications", "kula.ai", "rippling.com", "alerts.mycurricula.com", "mail.notion.so", "updates.braze.com", "email.apple.com", "expo.dev", "news2date.news", "e.zoom.us", "employeebenefits", "google.com", "verizonwireless.com", "udemybusiness.udemy.com", "lucid.co", "omadahealth.com", "okta.com", "b2binfo"}
     set calPrefixes to {"Invitation:", "Updated invitation:", "Canceled event:", "Updated invitation with note:", "Canceled:"}
-    set markedCount to 0
-    repeat with m in (messages of inbox whose read status is false)
+    set noiseSubjectFragments to {"here is your weekly update for", "moved to trash", "you have work due in Jira", "Your Android device will soon join", "Summer Fridays", "Torchie Awards", "Don't let an outage disrupt", "What's new in", "Visualizing systems", "reconnecting:"}
+
+    -- PASS 1: collect all unread into a plain list (do NOT filter inline — Mail 16 bug)
+    set allUnread to {}
+    repeat with m in (messages of inbox)
+        if read status of m is false then
+            set end of allUnread to m
+        end if
+    end repeat
+
+    -- Classify and build toMarkList
+    set toMarkList to {}
+    repeat with m in allUnread
         set mSender to sender of m
         set mSubject to subject of m
         set shouldMark to false
+
         repeat with p in nonHumanPatterns
-            if mSender contains p then set shouldMark to true
+            if mSender contains p then
+                set shouldMark to true
+                exit repeat
+            end if
         end repeat
+
         if not shouldMark then
             repeat with cp in calPrefixes
-                if mSubject starts with cp then set shouldMark to true
+                if mSubject starts with cp then
+                    set shouldMark to true
+                    exit repeat
+                end if
             end repeat
         end if
+
+        if not shouldMark then
+            repeat with ns in noiseSubjectFragments
+                if mSubject contains ns then
+                    set shouldMark to true
+                    exit repeat
+                end if
+            end repeat
+        end if
+
         if shouldMark then
-            set read status of m to true
-            set markedCount to markedCount + 1
+            set end of toMarkList to m
         end if
     end repeat
-    return "Marked " & markedCount & " as read. Remaining unread: " & (count (messages of inbox whose read status is false))
+
+    -- PASS 2: mark collected messages (safe — not iterating a live filtered collection)
+    set markedCount to 0
+    repeat with m in toMarkList
+        set read status of m to true
+        set markedCount to markedCount + 1
+    end repeat
+
+    -- List remaining unread
+    set remainList to ""
+    set remainCount to 0
+    repeat with m in (messages of inbox)
+        if read status of m is false then
+            set remainList to remainList & "  - " & sender of m & " | " & subject of m & linefeed
+            set remainCount to remainCount + 1
+        end if
+    end repeat
+
+    return "Marked " & markedCount & " as read." & linefeed & "Remaining unread: " & remainCount & linefeed & remainList
+end tell
+ASCRIPT
+```
+
+#### Deduplication pass (same sender + same subject)
+
+After the main mark-as-read pass, run a deduplication pass to collapse identical threads (e.g. multiple copies of the same Anthem email sent in a burst). Keep the first (newest) — mark the rest as read:
+
+```bash
+osascript << 'ASCRIPT'
+tell application "Mail"
+    -- Collect all unread into plain list
+    set allUnread to {}
+    repeat with m in (messages of inbox)
+        if read status of m is false then
+            set end of allUnread to m
+        end if
+    end repeat
+
+    -- Group by "sender|subject" key; keep first occurrence, mark rest
+    set seenKeys to {}
+    set toMarkList to {}
+    repeat with m in allUnread
+        set mKey to (sender of m) & "|" & (subject of m)
+        set alreadySeen to false
+        repeat with k in seenKeys
+            if k = mKey then
+                set alreadySeen to true
+                exit repeat
+            end if
+        end repeat
+        if alreadySeen then
+            set end of toMarkList to m
+        else
+            set end of seenKeys to mKey
+        end if
+    end repeat
+
+    set dupeCount to 0
+    repeat with m in toMarkList
+        set read status of m to true
+        set dupeCount to dupeCount + 1
+    end repeat
+
+    return "Deduped: " & dupeCount & " duplicate messages marked read."
 end tell
 ASCRIPT
 ```
@@ -402,6 +561,62 @@ Append new rows to the index table:
 
 ---
 
+### Extract links from Google Drive share emails
+
+If any Google Drive share notifications were in the inbox, extract their links and append to the shared docs index. This mirrors the Gemini pattern — links only, no content fetched. The user can open and share the doc when ready.
+
+**Index location:** `Reference/Shared Docs Index.md` in the Obsidian vault
+
+Look for emails from `drive-shares-noreply@google.com` (or subject containing "shared" from a Google Drive sender):
+
+```python
+import glob, email, re, os
+
+mail_base = os.path.expanduser("~/Library/Mail/V10")
+pattern = os.path.join(mail_base, "**", "*.emlx")
+for path in glob.glob(pattern, recursive=True):
+    try:
+        with open(path, "rb") as f:
+            raw = f.read()
+        lines = raw.split(b"\n", 1)
+        msg = email.message_from_bytes(lines[1])
+        sender = msg.get("From", "")
+        if "drive-shares-noreply@google.com" not in sender and "drive-shares" not in sender:
+            continue
+        subject = msg.get("Subject", "")
+        body = ""
+        for part in msg.walk():
+            if part.get_content_type() == "text/plain":
+                body = part.get_payload(decode=True).decode("utf-8", errors="ignore")
+            elif part.get_content_type() == "text/html" and not body:
+                body = part.get_payload(decode=True).decode("utf-8", errors="ignore")
+        # Extract Google Doc/Sheet/Slide links
+        links = re.findall(r"https://docs\.google\.com/(?:document|spreadsheets|presentation)/d/[^\s\]>\"&]+", body)
+        if links:
+            print(f"{subject} -> {links[0]}")
+    except Exception as e:
+        pass
+```
+
+Append new rows to the shared docs index:
+
+```markdown
+| YYYY-MM-DD | Sender (human name from subject) | "Doc Title" | [Open](https://docs.google.com/...) |
+```
+
+If `Reference/Shared Docs Index.md` does not exist, create it with this header first:
+
+```markdown
+# Shared Docs Index
+
+Docs shared with Steve via Google Drive. Links only — open and share content when ready to work with it.
+
+| Date | Shared By | Title | Link |
+|---|---|---|---|
+```
+
+---
+
 ## Phase 4 — Write Email Summary to Obsidian
 
 Write a **human-readable email summary** to the vault.
@@ -444,6 +659,8 @@ Write a **human-readable email summary** to the vault.
 ```
 
 Write this file **before** presenting the summary to the user — it ensures the summary is persisted in Obsidian even if the session ends.
+
+> **⚠️ File writing must be done by the main agent** using the `create` tool directly. Do NOT delegate file writing to a sub-agent — task/general-purpose agents cannot write files in this environment. Use `create` with the full absolute path.
 
 ---
 
