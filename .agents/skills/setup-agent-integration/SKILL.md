@@ -1,13 +1,16 @@
 ---
 name: setup-agent-integration
-description: Wire this repo's skills into OpenCode, VS Code Copilot, and Copilot CLI on a new machine using symlinks. The repo can live anywhere — tools always look in stable home-directory locations. Run once after cloning.
+description: Wire this repo's skills into OpenCode, VS Code Copilot, and Copilot CLI on a new machine using symlinks. Actually writes config files and creates symlinks — run once after cloning.
 ---
 
 # Skill: Setup Agent Integration
 
-Wire this repo's skills into your agent tools so they are available in every session, regardless of where the repo is cloned. Covers OpenCode, VS Code Copilot, and Copilot CLI.
+Wire this repo's skills into your agent tools so they are available in every session,
+regardless of where the repo is cloned. Covers OpenCode, VS Code Copilot, and Copilot CLI.
 
-**Core strategy:** instead of pointing each tool's config at this repo's actual path, we create symlinks in stable `~/` locations that tools already discover automatically. The repo can be cloned anywhere and the tool configs never need to change.
+**Core strategy:** create symlinks in stable `~/` locations that tools already discover
+automatically. Tool configs point at those stable paths — the repo can be cloned anywhere
+and configs never need to change.
 
 Run once after cloning, or to repair a broken setup.
 
@@ -20,13 +23,13 @@ REPO=$(git rev-parse --show-toplevel 2>/dev/null)
 echo "Repo root: $REPO"
 ```
 
-Confirm with the user if the detected path looks wrong before proceeding.
+Confirm with the user before proceeding if the path looks wrong.
 
 ---
 
 ## Phase 1 — Skill Symlinks (`~/.agents/skills/`)
 
-`~/.agents/skills/` is the shared discovery location for all three tools. Rather than symlinking the entire directory (which would conflict if you also have personal skills there), we symlink each skill individually so personal and repo skills coexist cleanly.
+Symlink each skill individually so personal and repo skills coexist without collision.
 
 ```bash
 mkdir -p "$HOME/.agents/skills"
@@ -34,68 +37,74 @@ mkdir -p "$HOME/.agents/skills"
 for skill_dir in "$REPO/.agents/skills"/*/; do
   name=$(basename "$skill_dir")
   link="$HOME/.agents/skills/$name"
-
-  if [ -L "$link" ]; then
-    echo "updating: $link → $skill_dir"
-  else
-    echo "creating: $link → $skill_dir"
-  fi
-
+  [ -L "$link" ] && echo "updating: $name" || echo "creating: $name"
   ln -sfn "$skill_dir" "$link"
 done
 
 echo ""
-echo "Skills now available in ~/.agents/skills/:"
-ls "$HOME/.agents/skills/"
-```
-
-After this, every skill in this repo is discoverable by all three tools without any path-specific config. Personal skills you maintain in a separate repo can coexist in the same `~/.agents/skills/` directory as individual symlinks alongside these.
-
----
-
-## Phase 2 — OpenCode: Global AGENTS.md
-
-OpenCode loads `~/.config/opencode/AGENTS.md` as global instructions at the start of every session. This repo does not ship a template for it — you'll need to create or maintain your own. At minimum it should list the skills now available in `~/.agents/skills/` so OpenCode can discover and invoke them.
-
-If you already have a global AGENTS.md, add a section pointing at the symlinked skills:
-
-```markdown
-## Carrum Developer Skills
-
-Skills available via `~/.agents/skills/`. Invoke any skill by name.
-See `skills-reference` for the full index.
+echo "Symlinks in ~/.agents/skills/:"
+ls -la "$HOME/.agents/skills/" | grep "^l"
 ```
 
 ---
 
-## Phase 3 — OpenCode: Directory Access
+## Phase 2 — OpenCode: Directory Access
 
-OpenCode's `external_directory` permission defaults to `ask` for any path outside the current working directory. Configure it once in `~/.config/opencode/opencode.jsonc` so you're never prompted for your regular project directories:
+OpenCode requires explicit allowance for directories outside the current working directory.
+Ask the user:
+
+> "What directory paths should OpenCode always have access to? These are typically your
+> work repo root(s), your notes vault, and any personal agent repos.
+> Example: `~/work/carrum`, `~/work/personal`, `~/Documents/Notes`"
+
+Accept a list in any format. Then:
+
+1. Check if `~/.config/opencode/opencode.jsonc` exists and read it if so.
+2. Merge the `permission.external_directory` block into the existing config, preserving
+   all other keys. Each path the user listed becomes an `"allow"` entry with `/**` appended.
+3. Write the result back. Use `//` comments to label the block.
+
+Example output shape:
 
 ```jsonc
-// ~/.config/opencode/opencode.jsonc
 {
   "$schema": "https://opencode.ai/config.json",
   "permission": {
     "external_directory": {
-      // Add each directory tree you work in regularly:
-      "~/work/<your-org>/**":         "allow",
-      "~/work/<personal>/**":         "allow",
-      "~/Documents/<notes-vault>/**": "allow"
+      "~/work/carrum/**":    "allow",
+      "~/work/personal/**": "allow",
+      "~/Documents/Notes/**": "allow"
     }
   }
 }
 ```
 
-Replace the placeholders with your actual directory names. `**` allows all subdirectories at any depth. This is the only persistent directory allowlist among the three tools — VS Code and Copilot CLI both handle access via interactive trust prompts instead.
+If the file already has an `external_directory` block, merge entries — do not overwrite
+existing ones.
 
-> **How it works:** `external_directory` is a gate checked before any individual tool permission (read, edit, bash). Once allowed here, OpenCode's default `allow` rules for those tools apply automatically — no further config needed.
+> **Note:** `external_directory` is a gate checked before any individual tool permission.
+> Once allowed here, OpenCode's default `allow` rules for read/edit/bash apply automatically.
 
 ---
 
-## Phase 4 — VS Code Copilot: One-time Settings
+## Phase 3 — VS Code Copilot: User Settings
 
-The skill symlinks from Phase 1 make skills available at `~/.agents/skills/`, but VS Code needs to know to look there. Add this to your VS Code User settings (`settings.json`):
+Detect the VS Code `settings.json` path. Check for each in order, use the first that exists:
+
+```bash
+for candidate in \
+  "$HOME/Library/Application Support/Code/User/settings.json" \
+  "$HOME/Library/Application Support/Code - Insiders/User/settings.json" \
+  "$HOME/Library/Application Support/Cursor/User/settings.json" \
+  "$HOME/.config/Code/User/settings.json" \
+  "$HOME/.config/Code - Insiders/User/settings.json"; do
+  [ -f "$candidate" ] && echo "$candidate" && break
+done
+```
+
+If none found, ask the user to provide the path.
+
+Then merge these two keys into the existing JSON, preserving all other settings:
 
 ```json
 {
@@ -107,40 +116,114 @@ The skill symlinks from Phase 1 make skills available at `~/.agents/skills/`, bu
 }
 ```
 
-These are stable paths that never need to change. `chat.useCustomizationsInParentRepositories` tells VS Code to walk up from open workspace folders and pick up `AGENTS.md` and `.github/copilot-instructions.md` from parent directories automatically.
+For `chat.instructionsFilesLocations`: if the key already exists, add the two entries
+without removing any existing ones. Write the file back with consistent indentation.
 
 ---
 
-## Phase 5 — Copilot CLI: Shell Profile
+## Phase 4 — Copilot CLI: Shell Profile
 
-Add `~/.agents` to `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` in your shell profile. This is a stable path — the symlinks do the work of routing to the right repo:
+Ask the user:
+
+> "What shell are you using? (zsh / bash / fish / other)"
+
+Based on their answer, determine the profile file:
+
+| Shell | Profile file |
+|---|---|
+| zsh | `~/.zshrc` |
+| bash | `~/.bash_profile` (macOS) or `~/.bashrc` (Linux) |
+| fish | `~/.config/fish/config.fish` |
+| other | Ask the user to specify |
+
+Then check if `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is already set in that file:
 
 ```bash
-# ~/.zshrc or ~/.bashrc
-export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.agents"
+grep -q "COPILOT_CUSTOM_INSTRUCTIONS_DIRS" "$PROFILE" && echo "already set" || echo "not found"
 ```
 
-Copilot CLI will look for `AGENTS.md` and `.github/instructions/**/*.instructions.md` inside `~/.agents` on every session start. Skills in `~/.agents/skills/` are also auto-discovered without this variable.
+If not already set, append idempotently. For zsh/bash:
+
+```bash
+cat >> "$PROFILE" << 'EOF'
+
+# Copilot CLI — agent skill discovery
+export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.agents"
+EOF
+```
+
+For fish:
+
+```fish
+set -Ux COPILOT_CUSTOM_INSTRUCTIONS_DIRS "$HOME/.agents"
+```
+
+> After writing, remind the user to `source` the profile or open a new terminal for the
+> export to take effect in the current session.
+
+---
+
+## Phase 5 — OpenCode: Global AGENTS.md (manual)
+
+`~/.config/opencode/AGENTS.md` is loaded as global instructions at the start of every
+OpenCode session. Its content is personal — this skill does not write it.
+
+If the file doesn't exist, prompt the user:
+
+> "`~/.config/opencode/AGENTS.md` not found. This file gives OpenCode always-on context
+> about your roles, skills, and working style. You'll want to create it — but its content
+> is yours to define. Skipping for now."
+
+If it does exist, no action needed.
 
 ---
 
 ## Phase 6 — Verify
 
+Run all checks and report pass/fail for each:
+
 ```bash
-echo "=== ~/.agents/skills (symlinks) ==="
+echo "=== Phase 1: Skill symlinks ==="
+count=$(ls -la "$HOME/.agents/skills/" 2>/dev/null | grep "^l" | wc -l | tr -d ' ')
+echo "$count symlink(s) in ~/.agents/skills/"
 ls -la "$HOME/.agents/skills/" | grep "^l"
 
 echo ""
-echo "=== OpenCode AGENTS.md ==="
-[ -f "$HOME/.config/opencode/AGENTS.md" ] && echo "present" || echo "(not installed)"
+echo "=== Phase 2: OpenCode external_directory ==="
+if grep -q "external_directory" "$HOME/.config/opencode/opencode.jsonc" 2>/dev/null; then
+  echo "PASS — entries found:"
+  grep -A10 "external_directory" "$HOME/.config/opencode/opencode.jsonc"
+else
+  echo "FAIL — not configured"
+fi
 
 echo ""
-echo "=== OpenCode external_directory config ==="
-cat "$HOME/.config/opencode/opencode.jsonc" 2>/dev/null || echo "(no config found)"
+echo "=== Phase 3: VS Code chat.instructionsFilesLocations ==="
+VSCODE_SETTINGS=$(for f in \
+  "$HOME/Library/Application Support/Code/User/settings.json" \
+  "$HOME/Library/Application Support/Code - Insiders/User/settings.json" \
+  "$HOME/Library/Application Support/Cursor/User/settings.json" \
+  "$HOME/.config/Code/User/settings.json"; do
+  [ -f "$f" ] && echo "$f" && break
+done)
+
+if [ -n "$VSCODE_SETTINGS" ] && grep -q "instructionsFilesLocations" "$VSCODE_SETTINGS" 2>/dev/null; then
+  echo "PASS — found in $VSCODE_SETTINGS"
+else
+  echo "FAIL — not configured (settings: ${VSCODE_SETTINGS:-not found})"
+fi
 
 echo ""
-echo "=== COPILOT_CUSTOM_INSTRUCTIONS_DIRS ==="
-echo "${COPILOT_CUSTOM_INSTRUCTIONS_DIRS:-(not set — add to shell profile)}"
+echo "=== Phase 4: COPILOT_CUSTOM_INSTRUCTIONS_DIRS ==="
+if [ -n "$COPILOT_CUSTOM_INSTRUCTIONS_DIRS" ]; then
+  echo "PASS (current session) — $COPILOT_CUSTOM_INSTRUCTIONS_DIRS"
+else
+  echo "NOT SET in current session (may still be written to profile — open a new terminal to confirm)"
+fi
+
+echo ""
+echo "=== Phase 5: OpenCode AGENTS.md ==="
+[ -f "$HOME/.config/opencode/AGENTS.md" ] && echo "present" || echo "not found (manual step)"
 ```
 
 ---
@@ -149,27 +232,27 @@ echo "${COPILOT_CUSTOM_INSTRUCTIONS_DIRS:-(not set — add to shell profile)}"
 
 | What | OpenCode | VS Code Copilot | Copilot CLI |
 |---|---|---|---|
-| **Skill discovery** | `~/.agents/skills/` (via AGENTS.md) | `~/.agents/skills/` (via `chat.instructionsFilesLocations`) | `~/.agents/skills/` (auto) |
+| **Skill discovery** | `~/.agents/skills/` | `~/.agents/skills/` via `chat.instructionsFilesLocations` | `~/.agents/skills/` (auto) |
 | **Directory access** | `permission.external_directory` in `opencode.jsonc` | Workspace Trust (interactive) | Session trust at launch |
-| **Always-on personal instructions** | `~/.config/opencode/AGENTS.md` | `~/.agents/skills/*.instructions.md` | `~/.copilot/copilot-instructions.md` |
-| **Config file** | `~/.config/opencode/opencode.jsonc` | VS Code `settings.json` (User) | `~/.zshrc` / shell profile |
+| **Always-on instructions** | `~/.config/opencode/AGENTS.md` | `~/.agents/skills/*.instructions.md` | `~/.copilot/copilot-instructions.md` |
+| **Written by this skill** | `opencode.jsonc` | `settings.json` | Shell profile |
 
 ### Why symlinks instead of direct paths
 
-Hardcoding the repo path in each tool's config means every engineer's config differs by machine, and breaks silently when the repo moves. Symlinks in stable `~/` locations decouple tool config from repo location:
-
-- Tool configs point at `~/.agents/skills/` — a path that never changes
-- Symlinks inside that directory point at the actual repo — set once after cloning, trivially updated
-- Personal skills coexist in the same `~/.agents/skills/` directory as individual symlinks alongside repo skills, with no collision
+Hardcoding the repo path in each tool's config means every engineer's config differs by
+machine and breaks silently when the repo moves. Symlinks in stable `~/` locations
+decouple tool config from repo location — set once after cloning, trivially updated.
 
 ### Key files in this repo
 
-- `.agents/skills/` — reusable skills invoked by name in any tool; see `skills-reference` for the index
+- `.agents/skills/` — reusable skills invoked by name; see `skills-reference` for the index
 
-See [`docs/workflow/coding-agent-guidelines.md`](../../../docs/workflow/coding-agent-guidelines.md) for guidance on what belongs in `AGENTS.md` vs `.github/copilot-instructions.md` when you add those files.
+See [`docs/workflow/coding-agent-guidelines.md`](../../../docs/workflow/coding-agent-guidelines.md)
+for guidance on `AGENTS.md` vs `.github/copilot-instructions.md`.
 
 ### Notes
 
-- `$CARRUM_HOME` should be set in your shell profile to the root where all Carrum repos are cloned.
-- OpenCode's `external_directory` is the only persistent config-file-based directory allowlist among these tools. VS Code and Copilot CLI use interactive trust prompts instead.
-- `github.copilot.chat.codeGeneration.instructions` in VS Code settings is **deprecated** as of VS Code 1.102. Use `.instructions.md` files via `chat.instructionsFilesLocations` instead.
+- `github.copilot.chat.codeGeneration.instructions` is **deprecated** as of VS Code 1.102.
+  Use `.instructions.md` files via `chat.instructionsFilesLocations` instead.
+- OpenCode's `external_directory` is the only config-file-based directory allowlist among
+  these three tools. VS Code and Copilot CLI use interactive trust prompts instead.
