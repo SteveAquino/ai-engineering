@@ -125,7 +125,7 @@ without removing any existing ones. Write the file back with consistent indentat
 
 Ask the user:
 
-> "What shell are you using? (zsh / bash / fish / other)"
+> "What shell are you using? (zsh / bash / other)"
 
 Based on their answer, determine the default profile file:
 
@@ -133,7 +133,6 @@ Based on their answer, determine the default profile file:
 |---|---|
 | zsh | `~/.zshrc` |
 | bash | `~/.bash_profile` (macOS) or `~/.bashrc` (Linux) |
-| fish | `~/.config/fish/config.fish` |
 | other | Ask the user to specify |
 
 Then check whether the file exists:
@@ -146,14 +145,10 @@ If it does not exist, inform the user and confirm before creating it:
 
 > "`$PROFILE` does not exist. Create it now?"
 
-If they confirm, create the file (for fish, also ensure `~/.config/fish/` exists):
+If they confirm, create it:
 
 ```bash
-# zsh / bash
 touch "$PROFILE"
-
-# fish
-mkdir -p "$HOME/.config/fish" && touch "$HOME/.config/fish/config.fish"
 ```
 
 Then check if `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is already set in that file:
@@ -162,7 +157,7 @@ Then check if `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is already set in that file:
 grep -q "COPILOT_CUSTOM_INSTRUCTIONS_DIRS" "$PROFILE" && echo "already set" || echo "not found"
 ```
 
-If not already set, append idempotently. For zsh/bash:
+If not already set, append idempotently:
 
 ```bash
 cat >> "$PROFILE" << 'EOF'
@@ -170,12 +165,6 @@ cat >> "$PROFILE" << 'EOF'
 # Copilot CLI — agent skill discovery
 export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$HOME/.agents"
 EOF
-```
-
-For fish:
-
-```fish
-set -Ux COPILOT_CUSTOM_INSTRUCTIONS_DIRS "$HOME/.agents"
 ```
 
 > After writing, remind the user to `source` the profile or open a new terminal for the
