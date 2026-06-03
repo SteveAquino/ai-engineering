@@ -28,7 +28,28 @@ Choices: the discovered role names.
 
 Store as `TARGET_ROLE`.
 
-### 0b — Load role context
+### 0b — Gather calendar and schedule context
+
+Before fetching any data sources, ask for today's schedule. This is the most important constraint — it determines what can realistically be accomplished and how async time should be allocated.
+
+**Ask the user:**
+> "What does your calendar look like today? Share any meetings, blocks, or constraints — including a hard end time if you have one. You can paste a list, describe it, or share a screenshot."
+
+Accept any format (list, prose, screenshot). Extract and store:
+- `MEETINGS` — list of meetings with times (name, start, end)
+- `ASYNC_WINDOWS` — contiguous blocks with no meetings (these are where work actually happens)
+- `HARD_END` — latest time the user can work today (default: assume no constraint if not given)
+- `ENERGY_NOTES` — any physical, fatigue, or focus notes the user mentions (e.g. "ending at 6pm due to health", "slow morning")
+
+If the user skips or says "no calendar today", set `MEETINGS = []`, `ASYNC_WINDOWS = ["all day"]`, `HARD_END = "EOD"`.
+
+This context shapes the entire plan:
+- **Do Today** items must fit in `ASYNC_WINDOWS` — if there's only 60 min of async time, the section should have at most 2–3 items
+- Meetings become the **Schedule** section header entries
+- `HARD_END` is displayed prominently at the top of the plan
+- Anything that can't fit today moves to **Carry Forward**, not **Do Today**
+
+### 0c — Load role context
 
 Determine today's date:
 
@@ -177,6 +198,20 @@ Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets 
 # Daily Plan — <Day, Month Date Year>
 
 > Sources: [[Inbox Summaries/Jira/YYYY-MM-DD Jira Summary|Jira]] · [[Inbox Summaries/GitHub/YYYY-MM-DD GitHub Summary|GitHub]] · [[Inbox Summaries/Email/YYYY-MM-DD Email Summary|Email]] · [[Inbox Summaries/Slack/YYYY-MM-DD Slack Summary|Slack]]
+> **Hard stop: <HARD_END>**   ← omit this line if no hard end was given
+
+## 🗓 Today's Schedule
+> Omit this section entirely if no calendar was provided.
+
+| Time | Event | Type |
+|---|---|---|
+| <time> | <meeting name> | Meeting |
+| <time>–<time> | **<async block name>** | Async window |
+
+**Async windows: <list of available blocks with durations>**
+
+## ⚡ <First async window label, e.g. "Right Now (10:00–11:00am)">
+> Only include if there is async time before the first meeting. Quick, low-friction actions only.
 
 ## 🔴 Do Today
 > These require your direct attention today.
@@ -208,6 +243,7 @@ Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets 
 - Every **Do Today** item must have a clear, single action. If an item is vague, break it into subtasks or move it to Schedule until it's scoped.
 - **Delegate** items should name a person or team if known. If unknown, name the function (e.g., "ask QA to verify").
 - **Schedule** items should include rough timing if inferable (e.g., "before end of sprint", "next week").
+- **Calendar-aware sizing:** Count the total async minutes available (sum of `ASYNC_WINDOWS`). If async time is < 90 min, **Do Today** should have at most 2–3 items. If < 3 hours, at most 4–5 items. A day packed with meetings is not a day to stack a 10-item do-list — be ruthless.
 - Keep each section to ≤6 items. If there's more, pick the highest-signal ones and fold the rest into a "and N more…" note.
 - Omit any section that has zero items — don't render empty headers.
 - Never invent items — only include things supported by data gathered in Phase 1.
