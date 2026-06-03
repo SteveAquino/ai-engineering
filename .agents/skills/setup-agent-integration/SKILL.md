@@ -127,14 +127,34 @@ Ask the user:
 
 > "What shell are you using? (zsh / bash / fish / other)"
 
-Based on their answer, determine the profile file:
+Based on their answer, determine the default profile file:
 
-| Shell | Profile file |
+| Shell | Default profile file |
 |---|---|
 | zsh | `~/.zshrc` |
 | bash | `~/.bash_profile` (macOS) or `~/.bashrc` (Linux) |
 | fish | `~/.config/fish/config.fish` |
 | other | Ask the user to specify |
+
+Then check whether the file exists:
+
+```bash
+[ -f "$PROFILE" ] && echo "exists" || echo "not found"
+```
+
+If it does not exist, inform the user and confirm before creating it:
+
+> "`$PROFILE` does not exist. Create it now?"
+
+If they confirm, create the file (for fish, also ensure `~/.config/fish/` exists):
+
+```bash
+# zsh / bash
+touch "$PROFILE"
+
+# fish
+mkdir -p "$HOME/.config/fish" && touch "$HOME/.config/fish/config.fish"
+```
 
 Then check if `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is already set in that file:
 
