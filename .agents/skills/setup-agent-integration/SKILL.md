@@ -1,18 +1,19 @@
 ---
 name: setup-agent-integration
-description: Wire agent skills from this repo and any additional repos into OpenCode, VS Code Copilot, and Copilot CLI on a new machine using individual symlinks. Run once after cloning.
+description: Wire agent skills and role personas from this repo and any additional repos into OpenCode, VS Code Copilot, and Copilot CLI on a new machine using individual symlinks. Run once after cloning.
 ---
 
 # Skill: Setup Agent Integration
 
-Wire agent skills into your tools so they are available in every session, regardless
-of where repos are cloned. Run from any repo that contains `.agents/skills/`. Additional
-repos (personal, employer, etc.) can be added when prompted.
+Wire agent skills and role personas into your tools so they are available in every
+session, regardless of where repos are cloned. Run from any repo that contains
+`.agents/skills/` or `.agents/roles/`. Additional repos (personal, employer, etc.)
+can be added when prompted.
 
-**Strategy:** `~/.agents/skills/` is a real directory containing one symlink per skill.
-Skills from multiple repos coexist — if the same skill name exists in two repos, the
-last one processed wins. Tool configs point at the stable `~/` path; symlinks route to
-the actual repos.
+**Strategy:** `~/.agents/skills/` and `~/.agents/roles/` are real directories containing
+one symlink per skill or role. Skills and roles from multiple repos coexist — if the
+same name exists in two repos, the last one processed wins. Tool configs point at the
+stable `~/` path; symlinks route to the actual repos.
 
 Run once after cloning, or to repair a broken setup.
 
@@ -33,14 +34,14 @@ Confirm with the user before proceeding if the path looks wrong.
 
 Ask the user:
 
-> "Are there any other repos with agent skills you'd like to include?
+> "Are there any other repos with agent skills or role personas you'd like to include?
 > List their paths, one per line — or press enter to skip.
 > Example: `~/work/personal/ai-engineering`"
 
 Build a list: `REPOS = [REPO, ...any additional repos provided]`.
 
-For each additional repo, verify `.agents/skills/` exists inside it before including it.
-If a path doesn't have `.agents/skills/`, warn and skip it.
+For each additional repo, verify it contains `.agents/skills/`, `.agents/roles/`, or both
+before including it. If a path has neither, warn and skip it.
 
 ---
 
@@ -87,6 +88,69 @@ done
 echo ""
 echo "All symlinks in ~/.agents/skills/:"
 ls -la "$HOME/.agents/skills/" | grep "^l"
+```
+
+---
+
+## Phase 2b — Role Symlinks (`~/.agents/roles/`)
+
+First, ensure `~/.agents/roles/` is a real directory. If it's currently a whole-dir
+symlink (from an older setup), convert it:
+
+```bash
+if [ -L "$HOME/.agents/roles" ]; then
+  OLD_TARGET=$(readlink "$HOME/.agents/roles")
+  echo "Converting whole-dir symlink → $OLD_TARGET to a real directory..."
+  rm "$HOME/.agents/roles"
+  mkdir -p "$HOME/.agents/roles"
+  shopt -s nullglob
+  for role_dir in "$OLD_TARGET"/*/; do
+    name=$(basename "$role_dir")
+    [ -d "$role_dir" ] && [ ! -L "$role_dir" ] && ln -sfn "$role_dir" "$HOME/.agents/roles/$name"
+  done
+  shopt -u nullglob
+else
+  mkdir -p "$HOME/.agents/roles"
+fi
+```
+
+Then, for each repo in `REPOS`, symlink its roles:
+
+```bash
+for REPO in "${REPOS[@]}"; do
+  echo "--- Linking roles from $REPO ---"
+  shopt -s nullglob
+  for repo_role_dir in "$REPO/.agents/roles"/*/; do
+    name=$(basename "$repo_role_dir")
+    link="$HOME/.agents/roles/$name"
+
+    if [ -d "$link" ] && [ ! -L "$link" ]; then
+      if [ -d "$link/state" ]; then
+        mkdir -p "$repo_role_dir/state"
+        source_count=$(find "$link/state" -type f | wc -l | tr -d ' ')
+        dest_before=$(find "$repo_role_dir/state" -type f 2>/dev/null | wc -l | tr -d ' ')
+        echo "migrating state: $link/state → $repo_role_dir/state"
+        echo "source files: $source_count"
+        echo "destination files before merge: $dest_before"
+        rsync -ai --update "$link/state/" "$repo_role_dir/state/"
+        dest_after=$(find "$repo_role_dir/state" -type f | wc -l | tr -d ' ')
+        echo "destination files after merge: $dest_after"
+      fi
+
+      backup="${link}.premigrate.$(date +%s)"
+      echo "warning: real directory found at $link — backing up to $backup"
+      mv "$link" "$backup"
+    fi
+
+    [ -L "$link" ] && echo "updating: $name" || echo "creating: $name"
+    ln -sfn "$repo_role_dir" "$link"
+  done
+  shopt -u nullglob
+done
+
+echo ""
+echo "All symlinks in ~/.agents/roles/:"
+ls -la "$HOME/.agents/roles/" | grep "^l"
 ```
 
 ---
@@ -224,6 +288,30 @@ echo "$count symlink(s) in ~/.agents/skills/"
 ls -la "$HOME/.agents/skills/" | grep "^l"
 
 echo ""
+echo "=== Phase 2b: Role symlinks ==="
+role_count=$(ls -la "$HOME/.agents/roles/" 2>/dev/null | grep "^l" | wc -l | tr -d ' ')
+echo "$role_count symlink(s) in ~/.agents/roles/"
+ls -la "$HOME/.agents/roles/" | grep "^l"
+shopt -s nullglob
+for link in "$HOME/.agents/roles"/*; do
+  [ -L "$link" ] || continue
+  name=$(basename "$link")
+  role_md="$link/ROLE.md"
+  state_dir="$link/state"
+  if [ -f "$role_md" ] && [ -d "$state_dir" ] && { [ -f "$state_dir/memories.md" ] || [ -f "$state_dir/sessions.md" ]; }; then
+    echo "PASS — $name"
+  else
+    echo "FAIL — $name"
+    [ -f "$role_md" ] || echo "  missing ROLE.md"
+    [ -d "$state_dir" ] || echo "  missing state/"
+    if [ -d "$state_dir" ] && [ ! -f "$state_dir/memories.md" ] && [ ! -f "$state_dir/sessions.md" ]; then
+      echo "  missing memories.md and sessions.md"
+    fi
+  fi
+done
+shopt -u nullglob
+
+echo ""
 echo "=== Phase 3: OpenCode external_directory ==="
 if grep -q "external_directory" "$HOME/.config/opencode/opencode.jsonc" 2>/dev/null; then
   echo "PASS — entries found:"
@@ -267,6 +355,7 @@ echo "=== Phase 6: OpenCode AGENTS.md ==="
 | What | OpenCode | VS Code Copilot | Copilot CLI |
 |---|---|---|---|
 | **Skill discovery** | `~/.agents/skills/` | `~/.agents/skills/` via `chat.instructionsFilesLocations` | `~/.agents/skills/` (auto) |
+| **Role discovery** | `~/.agents/roles/` via role-aware skills | `~/.agents/roles/` via role-aware skills | `~/.agents/roles/` via role-aware skills |
 | **Directory access** | `permission.external_directory` in `opencode.jsonc` | Workspace Trust (interactive) | Session trust at launch |
 | **Always-on instructions** | `~/.config/opencode/AGENTS.md` | `~/.agents/skills/*.instructions.md` | `~/.copilot/copilot-instructions.md` |
 | **Written by this skill** | `opencode.jsonc` | `settings.json` | Shell profile |
@@ -276,6 +365,10 @@ echo "=== Phase 6: OpenCode AGENTS.md ==="
 - Skills from multiple repos coexist as individual symlinks. If the same skill name
   appears in two repos, the last repo processed wins — carrum skills conventionally
   run last and take precedence over personal skills of the same name.
+- If `~/.agents/roles/<name>` already exists as a real directory, treat it as possible
+  pre-symlink local state: merge any `state/` files into the repo role with
+  `rsync --update`, print the merge summary, then back up the original directory to
+  `.premigrate.<timestamp>` before replacing it with the symlink.
 - `github.copilot.chat.codeGeneration.instructions` is **deprecated** as of VS Code 1.102.
   Use `.instructions.md` files via `chat.instructionsFilesLocations` instead.
 - OpenCode's `external_directory` is the only config-file-based directory allowlist
