@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Meta-skill for creating a new agent skill. Gathers the skill's purpose, classifies it as employer-specific or personal/portable, then scaffolds the SKILL.md in the right place — a git worktree + draft PR for employer skills, or the personal skills library for portable ones.
+description: Meta-skill for creating a new agent skill. Gathers the skill's purpose, classifies it as employer-specific or personal/portable, then scaffolds the SKILL.md in the right place — a git worktree + draft PR for employer skills, or the personal skills library for portable ones. Treats business-specific logic, internal identifiers, source paths, workflow details, and credentials as local-only by default, routed to a gitignored references/local.md overlay instead of the committed file.
 ---
 
 # Skill: Create Skill
@@ -104,6 +104,7 @@ Based on the user's description, draft the key design decisions:
 3. **Phases or sections** — outline what the skill will do step by step
 4. **Key tools** — what commands, APIs, or CLIs the skill uses
 5. **Inputs/outputs** — what the user provides, what the skill produces
+6. **Local-only content** — scan the description and outline for anything covered by "Local-only by default" (Phase 3): proprietary business logic, internal identifiers, source paths, workflow details, or credentials. List each item found and note that it will live in `references/local.md` (gitignored) rather than the committed `SKILL.md`. If nothing applies, note that explicitly.
 
 Present the design as a brief outline.
 
@@ -124,10 +125,50 @@ Every skill gets exactly one `SKILL.md` at the directory root. Use semantic subd
 | Path | Purpose | Committed? |
 |------|---------|------------|
 | `SKILL.md` | Skill definition | ✅ Yes |
-| `docs/` | Rubrics, templates, examples, supporting reference docs | ✅ Yes |
-| `references/` | Team/machine-specific overlays (org names, paths, project keys) | ❌ No (git-ignored) |
+| `docs/` | Rubrics, templates, examples, supporting reference docs — including `docs/local.example.md`, a committed **template** showing the shape of `references/local.md` with placeholder values only | ✅ Yes |
+| `references/` | Business/team/machine-specific overlay: real org names, internal identifiers, source paths, workflow details, credentials, and any other non-portable configuration | ❌ No (git-ignored) |
 
-Create `docs/` only if the skill has supporting documents to commit. Create `references/` and add a `## Local References` boilerplate to `SKILL.md` if the skill needs team-specific context.
+Create `docs/` only if the skill has supporting documents to commit. Create `references/` (with a matching `docs/local.example.md` template) and add the `## Local References` boilerplate below to `SKILL.md` whenever the skill's design touches anything business-specific — see "Local-only by default" next.
+
+---
+
+### Local-only by default
+
+Business-specific details are **local-only by default**, not just "when obviously needed." Before writing `SKILL.md`, review the approved design from Phase 2 and route anything in the following categories out of the committed file and into a gitignored `references/local.md` overlay instead:
+
+- **Proprietary or business-specific logic** — org-specific rules, decision criteria, or workflow steps that only make sense for one employer/team
+- **Internal identifiers** — project/board keys (e.g. Jira project codes), pod/team names, ticket prefixes, environment or service names
+- **Source paths** — absolute filesystem paths, internal repo names, internal URLs/domains, vault or notes locations specific to one machine or org
+- **Workflow details** — internal Slack/Jira/CI conventions, escalation paths, approval chains, or any process specific to one organization
+- **Credentials or secrets** — API keys, tokens, account names, auth details of any kind (these never belong in *either* the committed file or `references/local.md` in plaintext beyond a placeholder — treat `references/local.md` as gitignored config, not a secrets store)
+
+Committed `SKILL.md` content should describe generic, portable behavior and read optional values from the overlay, falling back to asking the user or to safe generic defaults when the overlay is absent. This applies to every destination — personal, role-specific, and employer/project skills alike.
+
+**When the skill needs a local overlay, add this boilerplate to `SKILL.md`** (adjust the description to the skill's actual keys):
+
+````markdown
+## Local References (optional)
+
+Before running, check for local configuration:
+
+```bash
+cat "$(dirname "$0")/references/local.md" 2>/dev/null || echo "(no local overlay — using defaults/prompts)"
+```
+
+`references/local.md` is git-ignored and never committed. See `docs/local.example.md` for the
+supported keys and their format. Treat any value not set there as unknown — fall back to asking
+the user or to generic, org-agnostic behavior.
+````
+
+Pair it with a committed `docs/local.example.md` containing only placeholder values (`YOURPROJECT`, `/Users/yourname/...`, `your-org`, etc.) and comments explaining each key — never real values.
+
+**Verify the ignore rule before writing any local content:**
+
+```bash
+git check-ignore -v "<skill-dir>/references/local.md"
+```
+
+If nothing matches, the destination repo's `.gitignore` is missing coverage. Add the narrowest rule that fits its existing conventions (e.g. `.agents/skills/*/references/` if that pattern already exists for other skills, or a skill-specific `<skill-dir>/references/` line otherwise) **before** any real local values are written to disk, and confirm again with `git check-ignore -v`.
 
 ---
 
@@ -145,8 +186,18 @@ mkdir -p "$PERSONAL_SKILLS/$SKILL_NAME"
 
 Write `$PERSONAL_SKILLS/$SKILL_NAME/SKILL.md` with:
 - Frontmatter (`name`, `description`)
-- Content based on the approved design from Phase 2
+- Content based on the approved design from Phase 2 — generic and portable, with any local-only items identified in Phase 2 step 6 read from `references/local.md` instead of hardcoded
 - Follow the conventions in existing skills: phase-driven structure, `ask_user` before destructive actions, code blocks for all commands
+
+If Phase 2 step 6 identified any local-only content, also:
+
+```bash
+mkdir -p "$PERSONAL_SKILLS/$SKILL_NAME/docs" "$PERSONAL_SKILLS/$SKILL_NAME/references"
+```
+
+- Write `docs/local.example.md` with placeholder values only (never real org names, paths, or identifiers) and add the `## Local References` boilerplate to `SKILL.md` (see "Local-only by default" above).
+- Do **not** create `references/local.md` with real values as part of this scaffolding step — that is filled in locally by whoever uses the skill, never by `create-skill` itself, and must never be committed.
+- Verify coverage: `git check-ignore -v "$PERSONAL_SKILLS/$SKILL_NAME/references/local.md"`. This repo's `.gitignore` already excludes `.agents/skills/*/references/`, so this should already match; if it doesn't, stop and fix the gitignore before proceeding.
 
 **3b. Update the personal skills index**
 
@@ -180,8 +231,10 @@ mkdir -p "$ROLE_SKILLS/$SKILL_NAME"
 
 Write `$ROLE_SKILLS/$SKILL_NAME/SKILL.md` with:
 - Frontmatter (`name`, `description`)
-- Content based on the approved design from Phase 2
+- Content based on the approved design from Phase 2 — generic within the role's own operating scope, with any local-only items identified in Phase 2 step 6 read from `references/local.md` instead of hardcoded
 - Phase-driven structure with `ask_user` before destructive actions
+
+If Phase 2 step 6 identified any local-only content, also create `docs/local.example.md` (placeholder values only) and add the `## Local References` boilerplate to `SKILL.md` (see "Local-only by default" above). Verify with `git check-ignore -v "$ROLE_SKILLS/$SKILL_NAME/references/local.md"` — this repo's `.gitignore` already excludes `.agents/roles/*/skills/*/references/`. Never create `references/local.md` itself with real values as part of scaffolding.
 
 The skill will be automatically surfaced when `assume-role` loads `$ROLE_NAME`.
 
@@ -220,6 +273,17 @@ Write `$SKILL_DIR/SKILL.md` with:
 - Content based on the approved design from Phase 2
 - Phase-driven structure with `ask_user` confirmation gates
 
+**Credentials are never committed, in any destination.** Even in an employer repo where business logic and internal identifiers legitimately belong in the committed `SKILL.md`, machine-specific or secret values (API keys, tokens, personal account names, local file paths that vary per developer) still belong in a gitignored `references/local.md`, never in the committed file.
+
+If Phase 2 step 6 identified any local-only content (credentials, or machine-specific paths/identifiers that shouldn't be shared even within the org), also:
+
+```bash
+mkdir -p "$SKILL_DIR/docs" "$SKILL_DIR/references"
+git -C "<worktree-path>" check-ignore -v "<skills-subdir>/$SKILL_NAME/references/local.md"
+```
+
+If `check-ignore` reports no match, the destination repo's `.gitignore` doesn't yet exclude skill-local overlays. Add the narrowest rule that fits its existing conventions (mirror an existing pattern if one covers other skills' `references/` dirs, otherwise add a skill-specific `<skills-subdir>/$SKILL_NAME/references/` line) as part of this same change, then confirm again with `check-ignore` before writing any real local values. Write `docs/local.example.md` with placeholder values only, and add the `## Local References` boilerplate to `SKILL.md` (see "Local-only by default" above).
+
 **3c. Update the skills index**
 
 If a `skills-reference` or `personal-skills-index` equivalent exists in the destination, add a new row:
@@ -233,6 +297,7 @@ If a `skills-reference` or `personal-skills-index` equivalent exists in the dest
 ```bash
 cd "<worktree-path>"
 git add "<skills-subdir>/$SKILL_NAME/"
+git status  # confirm no references/local.md, credentials, or secrets are staged
 git commit -m "Add $SKILL_NAME skill
 
 <brief description of what the skill does and when to use it>
@@ -259,12 +324,14 @@ gh pr create \
 Summarize what was created:
 - Skill name and location
 - What it does (one sentence)
+- Whether any local-only overlay was scaffolded (`references/` + `docs/local.example.md`), and confirm it's gitignored — never report a local overlay as "committed"
 - For employer skills: worktree path + draft PR link
 - For personal skills: confirm it's live in this repo's `.agents/skills/` and will be discoverable through any configured global skill link
 
 Remind the user:
 - **Personal skills** are available after the relevant agent restarts or reloads its configured skill directory
 - **Employer skills** need the PR reviewed and merged before they're available to the team
+- If a local overlay was scaffolded, the user (or whoever adopts the skill) still needs to copy `docs/local.example.md` to `references/local.md` and fill in real values locally — `create-skill` never does this on their behalf
 
 ---
 
@@ -273,3 +340,4 @@ Remind the user:
 - Personal skills library: this repo's `.agents/skills/`
 - Personal skills index: `<repo-root>/.agents/skills/personal-skills-index/SKILL.md`
 - Skill conventions: study `assume-role`, `create-role`, and `session-reflect` as exemplars
+- Local-overlay convention: study `obsidian-vault`, `read-apple-mail`, `clean-inbox`, or `weekly-impact-recap` for worked examples of `references/local.md` + `docs/local.example.md`

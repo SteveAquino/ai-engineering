@@ -72,6 +72,30 @@ cat .agents/roles/$TARGET_ROLE/state/memories.md
 
 Use the role's purpose and goals to guide what "important" means when prioritizing the plan.
 
+### 0d. Monday weekly impact recap
+
+On Monday, before gathering today's inbox sources, check whether `TARGET_ROLE` is opted in to a
+weekly impact recap. A role is opted in if its `ROLE.md` designates it as a leadership/manager
+role that wants one, or if it's explicitly listed in the `weekly-impact-recap` skill's local
+overlay (`.agents/skills/weekly-impact-recap/references/local.md` — gitignored, present only in
+environments that have configured it; see that skill's `docs/local.example.md` for the format).
+If `TARGET_ROLE` is not opted in by either signal, skip this step entirely.
+
+If opted in, invoke the `weekly-impact-recap` skill after loading role context. It reviews the
+previous Monday–Sunday period and writes the dated recap to the configured vault/notes location.
+The recap is a companion artifact, not a substitute for today's plan.
+
+```text
+Invoke: weekly-impact-recap
+Inputs: current date, target role, vault/notes path (from local overlay if configured)
+Output: <VAULT_PATH>/Weekly Recaps/<previous Monday> to <previous Sunday> Accomplishments.md
+```
+
+The weekly recap is timeboxed and read-only against whatever sources are configured (e.g. Jira,
+GitHub, Slack, email). If live queries are unavailable, preserve the limitation in the recap
+rather than using stale data as current evidence. Continue preparing today's plan if the recap
+cannot be generated.
+
 ---
 
 ## Phase 1 — Gather Context via Inbox Sub-Skills
@@ -160,6 +184,13 @@ SLACK_SUMMARY="$VAULT_PATH/Inbox Summaries/Slack/$TODAY Slack Summary.md"
 
 If a Slack summary exists, read it for additional context. Do not invoke any tool to create it — Slack digests are manually shared or created via `clean-inbox`-style processing.
 
+**Critical Slack-source rule:** only promote a Slack-derived item into the daily plan if the digest preserves a **specific, checkable source** for that item — preferably a Slack permalink, or at minimum a directly checkable Jira/GitHub/Confluence link captured alongside the Slack note. A generic label like "Slack digest", "#preng", "Aditi asked", or "pasted Slack notes" is **not sufficient**.
+
+If a pasted/manual Slack digest surfaces a plausible action but does **not** include a specific permalink or equivalent checkable source:
+- Prefer to **omit** the item rather than fabricate confidence
+- Or include it only as `⚠️ needs source verification — ...`
+- If a user is present and the interruption is reasonable, ask them for the specific permalink/thread before treating it as a normal action item
+
 ### 1e. Recent Merged PRs (optional enrichment)
 
 Pull lightweight recent activity that doesn't require a sub-skill:
@@ -174,6 +205,34 @@ gh pr list --state merged --json number,title,mergedAt,url \
 ---
 
 ## Phase 2 — Classify and Synthesize the Plan
+
+### Source-verification gate (run before classification)
+
+Before an item can appear as a normal actionable checkbox, verify that you can point to a **specific, checkable source** for that exact item.
+
+Allowed source forms:
+- Jira ticket key or URL (for example `TEC-8164` or `https://.../browse/TEC-8164`)
+- GitHub PR / issue URL
+- Slack permalink (`.../archives/.../p1234567890123456`)
+- Confluence URL
+- Obsidian wikilink **only if** the referenced note itself contains one of the checkable sources above
+
+Not sufficient on their own:
+- "Slack digest"
+- "Email summary"
+- "Task List"
+- channel names without permalinks (for example `#preng`)
+- person-only references (for example "Priya asked", "Justin DM")
+- copied carry-forward rows that no longer preserve the original source
+
+If the item has a valid source, keep it eligible for normal classification.
+
+If the item is useful but lacks a valid source, you have exactly three acceptable options:
+1. **Omit it entirely**
+2. Include it as `⚠️ needs source verification — ...` with the best-available provenance note
+3. If interactive and not disruptive, ask the user for the missing source link before including it
+
+Never silently upgrade a weakly sourced or unsourced item into a normal action item.
 
 ### Classification rubric
 
@@ -217,6 +276,7 @@ Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets 
 > These require your direct attention today.
 
 - [ ] <specific action> — <context: PR#, ticket key, or reason it's urgent> [<link>]
+- [ ] <specific action> — <context> _(source: <specific checkable source>)_
 - [ ] ...
 
 ## 👥 Delegate
@@ -249,6 +309,12 @@ Every actionable item is a checkbox. Items in **Drop / Note** are plain bullets 
 - Never invent items — only include things supported by data gathered in Phase 1.
 - **Every external reference must be a hyperlink — no exceptions.** Jira tickets, GitHub PRs, issues, and any other external resource must be linked inline where they first appear. Plain-text keys like `TEC-1234` or `#99` with no link are not acceptable in the output.
 - **Never fabricate links.** If a real URL is not available from the gathered data, write the item as plain text with a note like "(check email for invite link)" or "(find in Slack)". Do not construct placeholder URLs like `TEC-0000` or guess at ticket numbers.
+- **Every generated action item must carry its own inline source citation.** Add `_(source: ...)_` or equivalent directly on the item line. Do not rely on the plan-level `> Sources:` header as evidence for individual items.
+- **Generic provenance is not enough.** `Slack digest`, `email summary`, `Task List`, `#preng`, `GitHub bot`, or a person's name without a direct link/key are insufficient for a normal action item.
+- **Carry-forward requires re-validation.** Before carrying an item into a new daily plan, re-open the prior plan / task list row / source note and confirm the item still retains a specific, checkable source. Preserve that source in the newly generated line.
+- **Do not silently carry forward source-less items.** If a carried item no longer has a valid source, either drop it, or render it as `⚠️ needs source verification — ...` for one-time human confirmation. Do not increment `carried N×` on an unverified item.
+- **Task List / legacy action lists are secondary indexes, not primary evidence.** Only carry an item from them when the row itself contains a live Jira/GitHub/Slack/Confluence citation (or a resolvable note that does). Otherwise treat the row as unverified memory and do not promote it blindly.
+- **Slack-derived items need a permalink.** If the underlying Slack material is a pasted digest or summary without message URLs, omit the item or mark it `⚠️ needs source verification` instead of presenting it as trusted fact.
 
 ---
 
