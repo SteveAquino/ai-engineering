@@ -72,6 +72,30 @@ cat .agents/roles/$TARGET_ROLE/state/memories.md
 
 Use the role's purpose and goals to guide what "important" means when prioritizing the plan.
 
+### 0d. Monday weekly impact recap
+
+On Monday, before gathering today's inbox sources, check whether `TARGET_ROLE` is opted in to a
+weekly impact recap. A role is opted in if its `ROLE.md` designates it as a leadership/manager
+role that wants one, or if it's explicitly listed in the `weekly-impact-recap` skill's local
+overlay (`.agents/skills/weekly-impact-recap/references/local.md` — gitignored, present only in
+environments that have configured it; see that skill's `docs/local.example.md` for the format).
+If `TARGET_ROLE` is not opted in by either signal, skip this step entirely.
+
+If opted in, invoke the `weekly-impact-recap` skill after loading role context. It reviews the
+previous Monday–Sunday period and writes the dated recap to the configured vault/notes location.
+The recap is a companion artifact, not a substitute for today's plan.
+
+```text
+Invoke: weekly-impact-recap
+Inputs: current date, target role, vault/notes path (from local overlay if configured)
+Output: <VAULT_PATH>/Weekly Recaps/<previous Monday> to <previous Sunday> Accomplishments.md
+```
+
+The weekly recap is timeboxed and read-only against whatever sources are configured (e.g. Jira,
+GitHub, Slack, email). If live queries are unavailable, preserve the limitation in the recap
+rather than using stale data as current evidence. Continue preparing today's plan if the recap
+cannot be generated.
+
 ---
 
 ## Phase 1 — Gather Context via Inbox Sub-Skills
