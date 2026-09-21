@@ -114,11 +114,20 @@ After writing, display the reflection and confirm it captures the session accura
 
 ## Phase 3 — Route Memories
 
-**Use `ask_user`:**
-> "Would you like me to append the key memories to a role now?"
-Choices: `["Yes — choose a role", "No — I'll review the file first"]`
+Always route the durable memories identified in the reflection; do not leave them
+only in the reflection document.
 
-If yes: follow the `remember` skill flow.
+1. If a role was assumed in the current session, use that role.
+2. Otherwise, choose the most relevant available role from `~/.agents/roles/`.
+   For software, repository, or coding work, use
+   `software-engineering-assistant` when no more specific role is available.
+3. Append every memory under that role's `## Recent` section using the
+   `remember` skill format and today's date.
+4. Confirm the written entries and check whether consolidation is needed.
+
+Do not ask for permission before routing memories. If the role is genuinely
+ambiguous, record the memories in the most relevant engineering role and mention
+that assumption in the wrap-up.
 
 ```bash
 # List available roles
