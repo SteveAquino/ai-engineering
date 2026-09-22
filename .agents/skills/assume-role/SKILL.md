@@ -9,7 +9,17 @@ Use this skill to steer the current session to operate under a specific role per
 
 ## Path Resolution
 
-Read `ROLES_DIR` from `.agents/references/local.md` in this repository before executing any path-dependent commands. If that file does not exist, tell the user to create it using `.agents/references/local.md` as a template (it defines `ROLES_DIR`, `SKILLS_DIR`, and `AGENTS_DIR` as absolute paths for this machine).
+**Important:** All phases below **MUST** use the resolved `$ROLES_DIR` absolute path, never a bare relative `.agents/roles/...` path — relative paths silently resolve against the current working directory's repo, which caused real session state to be written into the wrong unrelated repo in the past.
+
+Resolve `ROLES_DIR` before executing any path-dependent commands using this precedence:
+
+1. `.agents/references/local.md` in the current working directory, if it defines `ROLES_DIR`
+2. `.agents/references/local.md` in the canonical `ai-engineering` repo clone, if known on this machine
+3. A searched `ai-engineering/.agents/references/local.md` fallback, if needed
+
+`ROLES_DIR` must resolve to an **absolute path**. The safest long-term value is a stable machine-global location such as `~/.agents/roles` so the skill works regardless of which repo the session was launched from.
+
+If `ROLES_DIR` cannot be resolved, **stop immediately** and tell the user to fix `local.md` — do **not** silently fall back to a relative path.
 
 ---
 
@@ -18,11 +28,35 @@ Read `ROLES_DIR` from `.agents/references/local.md` in this repository before ex
 List all role directories:
 
 ```bash
-ls -d .agents/roles/*/  2>/dev/null | xargs -I{} basename {}
+LOCAL_MD=""
+
+if [ -f ".agents/references/local.md" ] && grep -q '^ROLES_DIR=' ".agents/references/local.md"; then
+  LOCAL_MD=".agents/references/local.md"
+elif [ -f "$HOME/work/personal/ai-engineering/.agents/references/local.md" ] && \
+     grep -q '^ROLES_DIR=' "$HOME/work/personal/ai-engineering/.agents/references/local.md"; then
+  LOCAL_MD="$HOME/work/personal/ai-engineering/.agents/references/local.md"
+else
+  LOCAL_MD=$(find "$HOME" -path "*/ai-engineering/.agents/references/local.md" -print 2>/dev/null | head -n1)
+fi
+
+if [ -z "${LOCAL_MD:-}" ] || [ ! -f "$LOCAL_MD" ]; then
+  echo "Error: could not resolve local.md. Fix .agents/references/local.md so it defines ROLES_DIR as an absolute path (preferably $HOME/.agents/roles), then rerun assume-role."
+  exit 1
+fi
+
+ROLES_DIR=$(grep '^ROLES_DIR=' "$LOCAL_MD" | head -n1 | cut -d= -f2-)
+ROLES_DIR="${ROLES_DIR/#\~/$HOME}"
+
+if [ -z "${ROLES_DIR:-}" ] || [[ "$ROLES_DIR" != /* ]]; then
+  echo "Error: ROLES_DIR in $LOCAL_MD must be an absolute path. Update it (preferably to $HOME/.agents/roles) and rerun assume-role."
+  exit 1
+fi
+
+ls -d "$ROLES_DIR"/*/ 2>/dev/null | xargs -I{} basename {}
 ```
 
 If no roles exist:
-> "No roles found in `.agents/roles/`. Use the `create-role` skill to define your first role."
+> "No roles found in `$ROLES_DIR`. Use the `create-role` skill to define your first role."
 Stop here.
 
 ---
@@ -48,7 +82,7 @@ Check how many session entries exist for the chosen role:
 
 ```bash
 # Count data rows (exclude header lines starting with | Date or |---|)
-grep -c "^| 20" .agents/roles/<ROLE_NAME>/state/sessions.md 2>/dev/null || echo 0
+grep -c "^| 20" "$ROLES_DIR/<ROLE_NAME>/state/sessions.md" 2>/dev/null || echo 0
 ```
 
 If **0 entries** — skip to Phase 2 (fresh session, no prior context to resume).
@@ -63,7 +97,7 @@ Choices: `["Resume previous session", "Start a fresh session"]`
 If **2+ entries** — show the full sessions table and let the user pick:
 
 ```bash
-cat .agents/roles/<ROLE_NAME>/state/sessions.md
+cat "$ROLES_DIR/<ROLE_NAME>/state/sessions.md"
 ```
 
 **Use `ask_user`:**
@@ -81,7 +115,7 @@ If starting fresh, proceed — a new entry will be logged in Phase 3.
 ## Phase 2 — Load Role Files
 
 ```bash
-ROLE_DIR=".agents/roles/<ROLE_NAME>"
+ROLE_DIR="$ROLES_DIR/<ROLE_NAME>"
 
 # Verify the role exists
 if [[ ! -d "$ROLE_DIR" ]]; then
@@ -111,12 +145,12 @@ Append a new entry to the role's `sessions.md`. Ask for an optional label first:
 
 Allow freeform. If the user skips or provides nothing, default to the current date in `YYYY-MM-DD` format (i.e., `$(date +%Y-%m-%d)`).
 
-Append a new row to `.agents/roles/<ROLE_NAME>/state/sessions.md`:
+Append a new row to `"$ROLES_DIR/<ROLE_NAME>/state/sessions.md"`:
 
 ```bash
 DATE=$(date +%Y-%m-%d)
 # Append row: | date | session-id | label |
-echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> .agents/roles/<ROLE_NAME>/state/sessions.md
+echo "| $DATE | <CURRENT_SESSION_ID> | <LABEL> |" >> "$ROLES_DIR/<ROLE_NAME>/state/sessions.md"
 ```
 
 The session ID is available from the current session context.
@@ -130,7 +164,8 @@ Before delivering the briefing, check for pending inbox messages:
 ```python
 import os, glob
 ROLE_NAME = "<ROLE_NAME>"
-inbox = os.path.expanduser(f".agents/roles/{ROLE_NAME}/state/inbox")
+ROLES_DIR = os.path.expanduser("<ROLES_DIR>")
+inbox = os.path.join(ROLES_DIR, ROLE_NAME, "state", "inbox")
 files = sorted(glob.glob(os.path.join(inbox, "*.md"))) if os.path.exists(inbox) else []
 print(f"Pending inbox messages: {len(files)}")
 for f in files:
@@ -161,7 +196,7 @@ I am now operating as the **`<ROLE_NAME>`** persona.
 
 ### 🛠 Role Skills
 
-<list of role-specific skills found in `.agents/roles/<ROLE_NAME>/skills/`, each with its one-line description from frontmatter — omit this section if no skills directory exists>
+<list of role-specific skills found in `"$ROLES_DIR/<ROLE_NAME>/skills/"`, each with its one-line description from frontmatter — omit this section if no skills directory exists>
 
 These skills are active for this session and can be invoked by name.
 
@@ -186,7 +221,7 @@ After delivering the briefing, begin responding in character as the role — app
 
 ## Reference
 
-- Roles directory: `.agents/roles/`
+- Roles directory: `$ROLES_DIR`
 - To create a new role: invoke `create-role`
 - To view all roles and session history: invoke `list-roles`
 - To re-brief after `/compact`: invoke `assume-role` again
